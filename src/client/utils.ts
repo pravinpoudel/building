@@ -2,12 +2,39 @@ import * as THREE from 'three'
 
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight()
-    dirLight_right_near.position.set(30, 80, 40)
+    dirLight_right_near.position.set(5, 80, 10)
     scene.add(dirLight_right_near)
 
     const dirLight_left_far = new THREE.DirectionalLight()
-    dirLight_left_far.position.set(-30, 80, -40)
+    dirLight_left_far.position.set(50, 80, -10)
     scene.add(dirLight_left_far)
+
+    const ambientLight = new THREE.DirectionalLight(0x404040)
+    scene.add(ambientLight)
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1)
+    dirLight.color.setHSL(0.1, 1, 0.95)
+    dirLight.position.set(600, 500, 50)
+    dirLight.position.multiplyScalar(1)
+    scene.add(dirLight)
+
+    dirLight.castShadow = true
+
+    dirLight.shadow.mapSize.width = 2048
+    dirLight.shadow.mapSize.height = 2048
+
+    const d = 50
+
+    dirLight.shadow.camera.left = -d
+    dirLight.shadow.camera.right = d
+    dirLight.shadow.camera.top = d
+    dirLight.shadow.camera.bottom = -d
+
+    dirLight.shadow.camera.far = 3500
+    dirLight.shadow.bias = -0.0001
+
+    const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10)
+    scene.add(dirLightHelper)
 
     return scene
 }
@@ -19,7 +46,7 @@ function addCamera() {
         0.1,
         1000
     )
-    camera.position.set(24, 19, 9)
+    camera.position.set(125, 250, 10)
     return camera
 }
 
