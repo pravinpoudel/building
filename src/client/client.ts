@@ -12,7 +12,7 @@ import { annotation } from './house_annotation'
 import './styles/style.css'
 
 let scene = new THREE.Scene()
-const renderer = new THREE.WebGLRenderer()
+const renderer = new THREE.WebGLRenderer({ antialias: true })
 const labelRenderer = new CSS2DRenderer()
 const developerMode = false
 
@@ -25,7 +25,7 @@ let pointer: THREE.Vector2 = new THREE.Vector2()
 let controls: OrbitControls
 let annotationSpriteList: Array<THREE.Sprite> = []
 
-const imageMap = new THREE.TextureLoader().load('textures/circle_texture.png')
+let imageMap: THREE.Texture = new THREE.TextureLoader().load('textures/circle_texture.png')
 window.addEventListener('click', checkAnnotationClick)
 
 function init() {
@@ -46,7 +46,8 @@ function init() {
     document.body.appendChild(renderer.domElement)
 
     controls = new OrbitControls(camera, labelRenderer.domElement) // (, html element used for event listener)
-    controls.target.set(0.0, 100.0, 0.0)
+    controls.target.set(0.0, 130.0, 5.0)
+    controls.enableDamping = true
     document.addEventListener('mousemove', onPointerMove)
 
     const objLoader = new OBJLoader()
@@ -143,6 +144,9 @@ function makeMove(params: any) {
     // camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
     // controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
 }
+
+function updateOpacity() {}
+
 function loadAnnotationIntoScene() {
     const menuPanel = document.getElementById('menu-panel') as HTMLDivElement
     const _menuList = document.createElement('ul') as HTMLUListElement
@@ -156,10 +160,6 @@ function loadAnnotationIntoScene() {
         myButton.classList.add('annotationButton')
         myButton.innerHTML = index + ' : ' + element['text']
         myButton.addEventListener('click', performAnnotation, false)
-        // make sprite
-        console.log(imageMap)
-
-        //
         const material = new THREE.SpriteMaterial({
             map: imageMap,
             depthTest: false,
@@ -167,7 +167,6 @@ function loadAnnotationIntoScene() {
             sizeAttenuation: false,
             // depthTest: true,
         })
-
         //create annotation sprite and annotation label at lookat position
         const myAnnotationSprite = new THREE.Sprite(material)
         myAnnotationSprite.position.set(element.lookAt.x, element.lookAt.y, element.lookAt.z)

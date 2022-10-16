@@ -1,4 +1,5 @@
 node_modules
 *.obj
 *.mtl
-dist/client/models/
+dist/client/models/astronaut
+dist/client/models/drawing_room
