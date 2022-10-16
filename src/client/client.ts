@@ -47,8 +47,33 @@ function init() {
 
     controls = new OrbitControls(camera, labelRenderer.domElement) // (, html element used for event listener)
     controls.target.set(0.0, 130.0, 5.0)
+    controls.dampingFactor = 0.15
+    controls.enableDamping = true
+    // const geometry = new THREE.BoxGeometry(1, 1, 1)
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    // const cube = new THREE.Mesh(geometry, material)
+    // cube.position.set(0.0, 130.0, 5.0)
+    // scene.add(cube)
+
     controls.enableDamping = true
     document.addEventListener('mousemove', onPointerMove)
+    controls.addEventListener('change', function () {
+        let rayDirection = new THREE.Vector3()
+            .subVectors(camera.position, controls.target)
+            .normalize()
+        raycaster.set(controls.target, rayDirection)
+        let intersects = raycaster.intersectObjects(sceneObjects, false)
+        if (intersects.length > 0) {
+            if (camera.position.distanceTo(controls.target) > intersects[0].distance) {
+                // camera.position.set(
+                //     intersects[0].point.x,
+                //     intersects[0].point.y,
+                //     intersects[0].point.z
+                // )
+                console.log('hit')
+            }
+        }
+    })
 
     const objLoader = new OBJLoader()
     const gltfLoader = new GLTFLoader()
