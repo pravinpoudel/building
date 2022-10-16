@@ -43,6 +43,21 @@ const annotation = [
             z: 15.1,
         },
     },
+
+    {
+        text: 'Bliss Door',
+        description: 'door with ancient wooden art with Sun and Moon engraved on it',
+        lookAt: {
+            x: 246.28,
+            y: 208.123,
+            z: -566.3,
+        },
+        cameraPosition: {
+            x: 100.28,
+            y: 193.123,
+            z: -434.3,
+        },
+    },
 ]
 
 export { annotation }

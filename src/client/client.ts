@@ -10,6 +10,7 @@ import { addLight, addCamera, addAnnotationSprite } from './utils'
 import { annotation } from './house_annotation'
 
 import './styles/style.css'
+import { fail } from 'assert'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -39,13 +40,14 @@ function init() {
     labelRenderer.setSize(window.innerWidth, innerHeight)
     labelRenderer.domElement.style.position = 'absolute'
     labelRenderer.domElement.style.top = '0px'
+    labelRenderer.domElement.style.pointerEvents = 'none'
     document.body.appendChild(labelRenderer.domElement)
 
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(window.innerWidth, window.innerHeight)
     document.body.appendChild(renderer.domElement)
 
-    controls = new OrbitControls(camera, labelRenderer.domElement) // (, html element used for event listener)
+    controls = new OrbitControls(camera, renderer.domElement) // (, html element used for event listener)
     controls.target.set(0.0, 130.0, 5.0)
     controls.dampingFactor = 0.15
     controls.enableDamping = true
@@ -78,7 +80,7 @@ function init() {
     const objLoader = new OBJLoader()
     const gltfLoader = new GLTFLoader()
 
-    gltfLoader.setPath('./models/drawing_room/').load('scene.gltf', function (gltf) {
+    gltfLoader.setPath('./models/').load('scene.gltf', function (gltf) {
         gltf.scene.traverse(function (child) {
             if (child instanceof THREE.Mesh) {
                 const _child = child as THREE.Mesh
@@ -130,18 +132,23 @@ function checkAnnotationClick(event: MouseEvent) {
         if (intersects[0].object.userData.annotationId != undefined) {
             const index = intersects[0].object.userData.annotationId
             const annotationData = annotation[index]
-            let allDescDiv = document.getElementsByClassName('description-div')
-            for (let i = 0, length = allDescDiv.length; i < length; i++) {
-                ;(allDescDiv[i] as HTMLElement).style.display = 'none'
-            }
-            let visibleDiv = document.getElementById('label' + index) as HTMLElement
-            visibleDiv.style.display = 'block'
+            displayDescription(index)
             makeMove(annotationData)
         }
     }
 }
 
-function makeMove(params: any) {
+function displayDescription(index: any) {
+    console.log(index)
+    let allDescDiv = document.getElementsByClassName('description-div')
+    for (let i = 0, length = allDescDiv.length; i < length; i++) {
+        ;(allDescDiv[i] as HTMLElement).style.display = 'none'
+    }
+    let visibleDiv = document.getElementById('label' + index) as HTMLElement
+    visibleDiv.style.display = 'block'
+}
+
+function makeMove(params: any, index?: any) {
     new TWEEN.Tween(camera.position)
         .to(
             {
@@ -161,11 +168,13 @@ function makeMove(params: any) {
                 y: params.lookAt.y,
                 z: params.lookAt.z,
             },
-            1000
+            2500
         )
         .easing(TWEEN.Easing.Cubic.Out)
         .start()
-
+    if (index != undefined) {
+        displayDescription(index)
+    }
     // camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
     // controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
 }
@@ -184,7 +193,13 @@ function loadAnnotationIntoScene() {
         _list.appendChild(myButton)
         myButton.classList.add('annotationButton')
         myButton.innerHTML = index + ' : ' + element['text']
-        myButton.addEventListener('click', performAnnotation, false)
+        myButton.addEventListener(
+            'click',
+            () => {
+                makeMove(element, index)
+            },
+            false
+        )
         const material = new THREE.SpriteMaterial({
             map: imageMap,
             depthTest: false,
@@ -242,6 +257,8 @@ function animate() {
         if (intersects.length > 0) {
             let result = new THREE.Vector3()
             camera.getWorldPosition(result)
+            console.log(result)
+            console.log(intersects[0].point)
         }
     }
     render()
