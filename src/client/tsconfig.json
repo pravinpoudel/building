@@ -3,7 +3,12 @@
         "target": "ES6",
         "moduleResolution": "node",
         "allowJs": true,
-        "strict": true
+        "strict": true,
+        "paths": {
+            "https://unpkg.com/three@0.139.0/examples/jsm/libs/tween.module.min.js": [
+                "../typing/tween.js"
+            ]
+        }
     },
     "include": ["**/*.ts"]
 }

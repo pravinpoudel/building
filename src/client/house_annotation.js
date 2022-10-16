@@ -1,38 +1,38 @@
 const annotation = [
     {
-        text: 'bathroom',
+        text: 'pianno',
         lookAt: {
-            x: 32.0,
-            y: 12.0,
-            z: 7.0,
+            x: -30.0,
+            y: 142.0,
+            z: 164.0,
         },
-        camerPosition: {
-            x: 26.0,
-            y: 19.0,
-            x: 9.0,
+        cameraPosition: {
+            x: 2.0,
+            y: 175.0,
+            z: -5.0,
         },
     },
     {
-        text: 'base floor',
+        text: 'art paint',
         lookAt: {
-            x: 33.4,
-            y: 7.0,
-            z: 11.0,
+            x: 347.4,
+            y: 285.0,
+            z: -15.0,
         },
-        camerPosition: {
-            x: 49.0,
-            y: 7.3,
-            z: 13.4,
+        cameraPosition: {
+            x: 91.0,
+            y: 252.3,
+            z: -174,
         },
     },
     {
-        text: 'outdoor',
+        text: 'sofa',
         lookAt: {
             x: 51.28,
             y: 8.123,
             z: 13.0,
         },
-        camerPosition: {
+        cameraPosition: {
             x: 66.0,
             y: 9.7,
             z: 15.1,

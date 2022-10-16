@@ -1,0 +1,38 @@
+* {
+    box-sizing: border-box; /* include padding and border in widdth */
+}
+body {
+    overflow: hidden;
+    margin: 0px;
+}
+
+#menu-panel {
+    position: absolute;
+    top: 60px;
+    left: 4px;
+    width: auto;
+    height: auto;
+    color: white;
+}
+
+ul {
+    list-style: none;
+}
+
+li {
+    margin: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    color: red;
+}
+.a-label {
+    color: white;
+    font-weight: bold;
+}
