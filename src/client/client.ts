@@ -19,12 +19,14 @@ const developerMode = false
 let camera: THREE.PerspectiveCamera
 let raycaster: THREE.Raycaster
 let annotationSprite = new THREE.Sprite()
-let sceneObject = new Array()
+let sceneObjects = new Array()
+let annotationLabels = new Array()
 let pointer: THREE.Vector2 = new THREE.Vector2()
 let controls: OrbitControls
 let annotationSpriteList: Array<THREE.Sprite> = []
 
 const imageMap = new THREE.TextureLoader().load('textures/circle_texture.png')
+window.addEventListener('click', checkAnnotationClick)
 
 function init() {
     scene = addLight(scene)
@@ -57,6 +59,7 @@ function init() {
                 _child.castShadow = true
                 _child.receiveShadow = true
                 _child.scale.set(100, 100, 100)
+                sceneObjects.push(_child)
             }
             if (child instanceof THREE.Light) {
                 const _light = child as THREE.Light
@@ -92,6 +95,23 @@ function init() {
 function performAnnotation(event: MouseEvent) {
     console.log(event)
     console.log('hello')
+}
+
+function checkAnnotationClick(event: MouseEvent) {
+    raycaster.setFromCamera(pointer, camera)
+    const intersects = raycaster.intersectObjects(annotationSpriteList, true)
+    if (intersects.length > 0) {
+        if (intersects[0].object.userData.annotationId != undefined) {
+            const index = intersects[0].object.userData.annotationId
+            const annotationData = annotation[index]
+            makeMove(annotationData)
+        }
+    }
+}
+
+function makeMove(params: any) {
+    camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
+    controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
 }
 function loadAnnotationIntoScene() {
     const menuPanel = document.getElementById('menu-panel') as HTMLDivElement
@@ -131,6 +151,7 @@ function loadAnnotationIntoScene() {
         annotationLableDiv.innerHTML = '' + index
         const annotationLabelObject = new CSS2DObject(annotationLableDiv)
         annotationLabelObject.position.set(element.lookAt.x, element.lookAt.y, element.lookAt.z)
+        // annotationLabels.push(annotationLabelObject)
         scene.add(annotationLabelObject)
     })
 }
@@ -159,8 +180,6 @@ function animate() {
         if (intersects.length > 0) {
             let result = new THREE.Vector3()
             camera.getWorldPosition(result)
-            console.log('camera position', result)
-            console.log('mouse position', intersects[0].point)
         }
     }
     render()
