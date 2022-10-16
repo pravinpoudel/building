@@ -4,4 +4,4 @@
 
 Astronaut 3D GLTF model rendered which need to be annotated: 
 
-![Screenshot](screenshots/astronaut.png)
+![Screenshot](screenshots/roman.png)
