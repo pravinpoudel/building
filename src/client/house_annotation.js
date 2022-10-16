@@ -1,6 +1,8 @@
 const annotation = [
     {
         text: 'pianno',
+        description:
+            'This is last working pianno owned by Clara Schumann antiqued over the original ebony case ',
         lookAt: {
             x: -30.0,
             y: 142.0,
@@ -14,6 +16,8 @@ const annotation = [
     },
     {
         text: 'art paint',
+        description:
+            'Las Meninas is a 1656 painting in the Museo del Prado in Madrid, by Diego Velázquez, the leading artist of the Spanish Golden Age.',
         lookAt: {
             x: 347.4,
             y: 285.0,
@@ -27,14 +31,15 @@ const annotation = [
     },
     {
         text: 'sofa',
+        description: "Don't expect everything to be special, this is just sofa",
         lookAt: {
-            x: 51.28,
-            y: 8.123,
-            z: 13.0,
+            x: 256.28,
+            y: 120.123,
+            z: -121.3,
         },
         cameraPosition: {
             x: 66.0,
-            y: 9.7,
+            y: 236.9,
             z: 15.1,
         },
     },

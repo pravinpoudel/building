@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
 * {
     box-sizing: border-box; /* include padding and border in widdth */
 }
 body {
     overflow: hidden;
     margin: 0px;
+    font-family: 'Roboto', sans-serif;
 }
 
 #menu-panel {
@@ -32,7 +35,21 @@ button {
 button:hover {
     color: red;
 }
+
 .a-label {
     color: white;
     font-weight: bold;
+    cursor: pointer;
+}
+
+.description-div {
+    position: absolute;
+    left: 30px;
+    background-color: black;
+    min-width: 200px;
+    padding: 10px;
+    color: rgb(218, 213, 203);
+    display: none;
+    pointer-events: none;
+    font-size: 12px;
 }

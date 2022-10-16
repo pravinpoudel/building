@@ -5,7 +5,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
-import { TWEEN } from 'https://unpkg.com/three@0.139.0/examples/jsm/libs/tween.module.min.js'
+import * as TWEEN from '@tweenjs/tween.js'
 import { addLight, addCamera, addAnnotationSprite } from './utils'
 import { annotation } from './house_annotation'
 
@@ -104,14 +104,44 @@ function checkAnnotationClick(event: MouseEvent) {
         if (intersects[0].object.userData.annotationId != undefined) {
             const index = intersects[0].object.userData.annotationId
             const annotationData = annotation[index]
+            let allDescDiv = document.getElementsByClassName('description-div')
+            for (let i = 0, length = allDescDiv.length; i < length; i++) {
+                ;(allDescDiv[i] as HTMLElement).style.display = 'none'
+            }
+            let visibleDiv = document.getElementById('label' + index) as HTMLElement
+            visibleDiv.style.display = 'block'
             makeMove(annotationData)
         }
     }
 }
 
 function makeMove(params: any) {
-    camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
-    controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
+    new TWEEN.Tween(camera.position)
+        .to(
+            {
+                x: params.cameraPosition.x,
+                y: params.cameraPosition.y,
+                z: params.cameraPosition.z,
+            },
+            1000
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start()
+
+    new TWEEN.Tween(controls.target)
+        .to(
+            {
+                x: params.lookAt.x,
+                y: params.lookAt.y,
+                z: params.lookAt.z,
+            },
+            1000
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start()
+
+    // camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
+    // controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
 }
 function loadAnnotationIntoScene() {
     const menuPanel = document.getElementById('menu-panel') as HTMLDivElement
@@ -149,6 +179,13 @@ function loadAnnotationIntoScene() {
         const annotationLableDiv = document.createElement('div')
         annotationLableDiv.classList.add('a-label')
         annotationLableDiv.innerHTML = '' + index
+        if (element.description != undefined) {
+            const descriptionDiv = document.createElement('div') as HTMLElement
+            descriptionDiv.classList.add('description-div')
+            descriptionDiv.setAttribute('id', 'label' + index)
+            descriptionDiv.innerHTML = element.description
+            annotationLableDiv.appendChild(descriptionDiv)
+        }
         const annotationLabelObject = new CSS2DObject(annotationLableDiv)
         annotationLabelObject.position.set(element.lookAt.x, element.lookAt.y, element.lookAt.z)
         // annotationLabels.push(annotationLabelObject)
@@ -173,6 +210,7 @@ function onPointerMove(event: MouseEvent) {
 
 function animate() {
     requestAnimationFrame(animate)
+    TWEEN.update()
     controls.update()
     if (developerMode) {
         raycaster.setFromCamera(pointer, camera)

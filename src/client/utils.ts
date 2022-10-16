@@ -33,8 +33,8 @@ function addLight(scene: THREE.Scene) {
     dirLight.shadow.camera.far = 3500
     dirLight.shadow.bias = -0.0001
 
-    const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10)
-    scene.add(dirLightHelper)
+    // const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10)
+    scene.add(dirLight)
 
     return scene
 }
