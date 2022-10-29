@@ -46,7 +46,8 @@ function addCamera() {
         0.1,
         1000
     )
-    camera.position.set(-120, 180, -247)
+    camera.position.set(10, 200, 50)
+    camera.lookAt(0, 200, 0)
     return camera
 }
 

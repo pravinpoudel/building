@@ -7,9 +7,24 @@
     </head>
 
     <body>
+        <div id="loader"></div>
+        <div id="main-screen" style="display: none">
+            <div id="menuBoard">
+                <div class="menu-box">
+                    <div id="selectControllerDiv">
+                        <label for="controllers">Control Options:</label>
+                        <ul>
+                            <li>WASD to go Forward, Left, Back, Right</li>
+                        </ul>
+                    </div>
+                    <button id="start-button">Start</button>
+                </div>
+            </div>
+        </div>
         <div class="container">
             <div id="menu-panel"></div>
         </div>
+
         <script type="module" src="bundle.js"></script>
     </body>
 </html>
