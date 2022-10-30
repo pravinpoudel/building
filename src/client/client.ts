@@ -11,8 +11,8 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
 import * as CANNON from 'cannon-es'
-//
-
+import CannonUtils from './canonUitls'
+import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
 import { addLight, addCamera, addAnnotationSprite } from './utils'
@@ -26,7 +26,7 @@ let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.physicallyCorrectLights = true
 renderer.shadowMap.enabled = true
-renderer.outputEncoding = THREE.sRGBEncoding
+// renderer.outputEncoding = THREE.sRGBEncoding
 
 let world
 const timeStep = 1 / 60
@@ -60,6 +60,7 @@ let camera: THREE.PerspectiveCamera
 let raycaster: THREE.Raycaster
 let annotationSprite = new THREE.Sprite()
 let sceneObjects = new Array()
+let RoomsItemBody = new Array()
 let annotationLabels = new Array()
 let pointer: THREE.Vector2 = new THREE.Vector2()
 let annotationSpriteList: Array<THREE.Sprite> = []
@@ -116,13 +117,11 @@ function init() {
     document.addEventListener('mousemove', onPointerMove)
 
     async function load_model() {
-        const objLoader = new OBJLoader()
         const gltfLoader = new GLTFLoader()
-
-        let MeshGeomState = []
         await gltfLoader.setPath('./models/').load('scene.gltf', function (gltf) {
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
+                    console.log('hi')
                     const _child = child as THREE.Mesh
                     // computing bounding box for it's geometry
                     // we only have to compute it's bounding box because this is static mesh
@@ -130,7 +129,7 @@ function init() {
                     _child.castShadow = true
                     _child.receiveShadow = true
                     _child.scale.set(100, 100, 100)
-                    sceneObjects.push(_child)
+                    sceneObjects.push(child)
                 }
                 if (child instanceof THREE.Light) {
                     const _light = child as THREE.Light
@@ -189,6 +188,15 @@ function postProcessing(renderer) {
 
 postProcessing(renderer)
 
+function getCenterPoint(mesh) {
+    var geometry = mesh.geometry
+    geometry.computeBoundingBox()
+    var center = new THREE.Vector3()
+    geometry.boundingBox.getCenter(center)
+    mesh.localToWorld(center)
+    return center
+}
+
 function intializeDemo_() {
     controls = new PointerLockControls(camera, document.body)
     controls.unlock()
@@ -198,6 +206,18 @@ function intializeDemo_() {
     })
     document.getElementById('start-button')?.addEventListener('click', () => {
         controls.lock()
+        // when user enter into the scene
+        sceneObjects.forEach((element, index) => {
+            let itemsBody: CANNON.Body = new CANNON.Body({
+                mass: 0,
+                shape: new CANNON.Sphere(5),
+            })
+            let target = new THREE.Vector3()
+            target = getCenterPoint(element)
+            itemsBody.position.copy(new CANNON.Vec3(target.x, target.y, target.z))
+            world.addBody(itemsBody)
+            RoomsItemBody.push(itemsBody)
+        })
     })
 }
 
@@ -322,12 +342,20 @@ function physicsWorld() {
     world = new CANNON.World({
         gravity: new CANNON.Vec3(0, -9.81, 0),
     })
+    // world.gravity.set(0, -9.81, 0)
     // negative value in y axis make it go down
+    world.broadphase = new CANNON.SAPBroadphase(world)
+    world.defaultContactMaterial.friction = 0
 }
+//-----------------------------------------------------------------------------------------------------------------------
+
+// suppose you made a
+
+// ---------------------------------------------------------------------------------------------------------------
 
 function animate(now: number) {
     requestAnimationFrame(animate)
-    world.step(timeStep)
+    // world.step(timeStep)
     const delta = now - lastTime
     lastTime = now
     TWEEN.update()
@@ -335,18 +363,19 @@ function animate(now: number) {
     render()
 }
 
+let delta
+
 function render() {
-    renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
-    console.log('composer screen', composerScreen)
-    composerScreen.render()
-    renderer.clear(false, true, false)
-    renderer.setViewport(20, window.innerHeight - 512, 256, 256)
-    composerMap.render()
-    // controls.update(clock.getDelta())
-    // labelRenderer.render(scene, camera)
-    // renderer.render(scene, camera)
+    delta = Math.min(+clock.getDelta, 0.2)
+    world.step(delta)
+    cannonDebugRenderer.update()
+    labelRenderer.render(scene, camera)
+    renderer.render(scene, camera)
 }
+physicsWorld()
+const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 init()
+
 initMapCamera()
 intializeDemo_()
 registerKeyWrapper()
