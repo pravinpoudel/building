@@ -64,7 +64,7 @@ class CannonUtils {
             }
         }
 
-        const faceIdsToRemove = []
+        const faceIdsToRemove: Array<any> = []
         for (let i = 0, il = faces.length; i < il; i++) {
             const face = faces[i]
             face.a = changes[face.a]

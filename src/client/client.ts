@@ -53,7 +53,7 @@ const labelRenderer = new CSS2DRenderer()
 const developerMode = false
 let characterSize = 20
 let box: THREE.Mesh
-let controls: PointerLockControls
+let controls: any
 const clock = new THREE.Clock()
 
 let camera: THREE.PerspectiveCamera
@@ -197,15 +197,26 @@ function getCenterPoint(mesh) {
     return center
 }
 
+function FPCLockHandler() {
+    mainscreen.style.display = 'none'
+}
+
+function FPCUnLockHandler() {
+    mainscreen.style.display = 'block'
+}
+let cotrolOptions = {
+    FPC: true,
+}
 function intializeDemo_() {
     controls = new PointerLockControls(camera, document.body)
     controls.unlock()
-    controls.addEventListener('lock', () => (mainscreen.style.display = 'none'))
-    controls.addEventListener('unlock', () => {
-        mainscreen.style.display = 'block'
-    })
+    controls.addEventListener('lock', FPCLockHandler)
+    controls.addEventListener('unlock', FPCLockHandler)
+
     document.getElementById('start-button')?.addEventListener('click', () => {
-        controls.lock()
+        if (cotrolOptions.FPC == true) {
+            controls.lock()
+        }
         // when user enter into the scene
         sceneObjects.forEach((element, index) => {
             let itemsBody: CANNON.Body = new CANNON.Body({
