@@ -59,23 +59,14 @@ let annotationSpriteList: Array<THREE.Sprite> = []
 let imageMap: THREE.Texture = new THREE.TextureLoader().load('textures/circle_texture.png')
 window.addEventListener('click', checkAnnotationClick)
 
-const forward = new THREE.Vector3(0, 0, -1)
-const velocity = new THREE.Vector3()
-const direction = new THREE.Vector3()
-const vertex = new THREE.Vector3()
-const color = new THREE.Color()
-
 const menuBoard = document.getElementById('menuBoard') as HTMLDivElement
 let mainscreen = document.getElementById('main-screen') as HTMLElement
 
 let playerSpeed = 5
-let fpcListener = true
-let manuallyLocked = false
 
 let keys: any = {}
 let deletedKeys: any = {}
 let handlers: any = {}
-let releaser: any = {}
 
 let mapCamera,
     mapSizeX = 128,
@@ -89,7 +80,7 @@ let right = 1024,
 function initMapCamera() {
     mapCamera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000)
     // for camera to see down up should be on z axis
-    mapCamera.up(0, 0, -1)
+    mapCamera.up = new THREE.Vector3(0, 0, -1)
     mapCamera.lookAt(0, 0, 0)
     mapCamera.position.y = 512
     scene.add(mapCamera)
@@ -157,7 +148,6 @@ function init() {
 }
 
 function postProcessing(renderer) {
-    console.log(renderer)
     composerScreen = new EffectComposer(renderer)
 
     // RenderPass is normally placed at the beginning of the chain in order to provide the rendered scene as an input for the next post-processing step.
@@ -169,12 +159,12 @@ function postProcessing(renderer) {
     let fxaaPass = new ShaderPass(FXAAShader)
     fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio)
     fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio)
-    // const copyPass = new ShaderPass(CopyShader)
+    const copyPass1 = new ShaderPass(CopyShader)
     // meaning of renderToScreen. I have to set to true only for the 'last' effect
-    fxaaPass.renderToScreen = true
-    console.log(composerScreen)
+    copyPass1.renderToScreen = true
     composerScreen.addPass(renderPass)
     composerScreen.addPass(fxaaPass)
+    composerScreen.addPass(copyPass1)
     // when screen is resized update fxaa resolution uniform as well
 
     // The width and height of the THREE.EffectComposer.renderTarget must match that of the WebGLRenderer.
@@ -191,7 +181,8 @@ function postProcessing(renderer) {
     composerMap.addPass(copyPass)
 }
 
-postProcessing(render)
+postProcessing(renderer)
+
 function intializeDemo_() {
     controls = new PointerLockControls(camera, document.body)
     controls.unlock()
@@ -320,38 +311,29 @@ function onPointerMove(event: MouseEvent) {
 }
 
 let lastTime = performance.now()
+
 function animate(now: number) {
     requestAnimationFrame(animate)
     const delta = now - lastTime
     lastTime = now
-
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta)
-    if (developerMode) {
-        raycaster.setFromCamera(pointer, camera)
-        const intersects = raycaster.intersectObjects(scene.children, true)
-        if (intersects.length > 0) {
-            let result = new THREE.Vector3()
-            camera.getWorldPosition(result)
-            console.log(result)
-            console.log(intersects[0].point)
-        }
-    }
     render()
 }
 
 function render() {
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
     console.log('composer screen', composerScreen)
-    // composerScreen.render()
+    composerScreen.render()
     renderer.clear(false, true, false)
     renderer.setViewport(20, window.innerHeight - 512, 256, 256)
     composerMap.render()
     // controls.update(clock.getDelta())
-    labelRenderer.render(scene, camera)
-    renderer.render(scene, camera)
+    // labelRenderer.render(scene, camera)
+    // renderer.render(scene, camera)
 }
 init()
+initMapCamera()
 intializeDemo_()
 registerKeyWrapper()
 document.addEventListener('keydown', keyPressWrapper)
