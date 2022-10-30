@@ -10,6 +10,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
+import * as CANNON from 'cannon-es'
 //
 
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
@@ -23,6 +24,13 @@ import { fail } from 'assert'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.physicallyCorrectLights = true
+renderer.shadowMap.enabled = true
+renderer.outputEncoding = THREE.sRGBEncoding
+
+let world
+const timeStep = 1 / 60
+
 renderer.autoClear = false
 
 let parameters: any = {
@@ -101,8 +109,6 @@ function init() {
     labelRenderer.domElement.style.top = '0px'
     labelRenderer.domElement.style.pointerEvents = 'none'
     document.body.appendChild(labelRenderer.domElement)
-
-    renderer.shadowMap.enabled = true
 
     renderer.setPixelRatio(window.devicePixelRatio)
     document.body.appendChild(renderer.domElement)
@@ -312,8 +318,16 @@ function onPointerMove(event: MouseEvent) {
 
 let lastTime = performance.now()
 
+function physicsWorld() {
+    world = new CANNON.World({
+        gravity: new CANNON.Vec3(0, -9.81, 0),
+    })
+    // negative value in y axis make it go down
+}
+
 function animate(now: number) {
     requestAnimationFrame(animate)
+    world.step(timeStep)
     const delta = now - lastTime
     lastTime = now
     TWEEN.update()
