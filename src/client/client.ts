@@ -1,9 +1,17 @@
 import * as THREE from 'three'
-import { Vec2 } from 'three'
+import { Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+// post proceesing helping tools
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader'
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
+//
+
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
 import { addLight, addCamera, addAnnotationSprite } from './utils'
@@ -15,6 +23,24 @@ import { fail } from 'assert'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.autoClear = false
+
+let parameters: any = {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBFormat,
+    stencilBuffer: false,
+}
+
+let renderTarget = new THREE.WebGLRenderTarget(512, 512, parameters)
+//  it is saying this should match rendertargeta nd composerMap
+
+renderer.setSize(window.innerWidth, window.innerHeight)
+
+let composerMap
+// -------------------------------------------------------
+let composerScreen
+
 const labelRenderer = new CSS2DRenderer()
 const developerMode = false
 let characterSize = 20
@@ -51,6 +77,24 @@ let deletedKeys: any = {}
 let handlers: any = {}
 let releaser: any = {}
 
+let mapCamera,
+    mapSizeX = 128,
+    mapSizeY = 64
+
+let right = 1024,
+    left = -1024,
+    top = 1024,
+    bottom = -1024
+
+function initMapCamera() {
+    mapCamera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000)
+    // for camera to see down up should be on z axis
+    mapCamera.up(0, 0, -1)
+    mapCamera.lookAt(0, 0, 0)
+    mapCamera.position.y = 512
+    scene.add(mapCamera)
+}
+
 function init() {
     scene = addLight(scene)
     scene.background = new THREE.Color(0xffffff)
@@ -70,7 +114,6 @@ function init() {
     renderer.shadowMap.enabled = true
 
     renderer.setPixelRatio(window.devicePixelRatio)
-    renderer.setSize(window.innerWidth, window.innerHeight)
     document.body.appendChild(renderer.domElement)
 
     document.addEventListener('mousemove', onPointerMove)
@@ -113,6 +156,42 @@ function init() {
     window.addEventListener('resize', onWindowResize)
 }
 
+function postProcessing(renderer) {
+    console.log(renderer)
+    composerScreen = new EffectComposer(renderer)
+
+    // RenderPass is normally placed at the beginning of the chain in order to provide the rendered scene as an input for the next post-processing step.
+    const renderPass = new RenderPass(scene, camera)
+    // When using post-processing with WebGL, you have to use FXAA for antialiasing
+    // Passing { antialias: true } to true when creating WebGLRenderer activates MSAA but only if you render to the default framebuffer
+    // (directly to screen).
+    const pixelRatio = 1
+    let fxaaPass = new ShaderPass(FXAAShader)
+    fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio)
+    fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio)
+    // const copyPass = new ShaderPass(CopyShader)
+    // meaning of renderToScreen. I have to set to true only for the 'last' effect
+    fxaaPass.renderToScreen = true
+    console.log(composerScreen)
+    composerScreen.addPass(renderPass)
+    composerScreen.addPass(fxaaPass)
+    // when screen is resized update fxaa resolution uniform as well
+
+    // The width and height of the THREE.EffectComposer.renderTarget must match that of the WebGLRenderer.
+    // #TODO: WHAT? Why? https://stackoverflow.com/questions/16167897/three-js-how-to-add-copyshader-after-fxaashader-r58
+    composerMap = new EffectComposer(renderer, renderTarget)
+    composerMap.setSize(512, 512)
+    let renderPassMap = new RenderPass(scene, mapCamera)
+    composerMap.addPass(renderPassMap)
+    var effectFXAA_Map = new ShaderPass(FXAAShader)
+    effectFXAA_Map.uniforms['resolution'].value.set(1 / 512, 1 / 512)
+    composerMap.addPass(effectFXAA_Map)
+    const copyPass = new ShaderPass(CopyShader)
+    copyPass.renderToScreen = true
+    composerMap.addPass(copyPass)
+}
+
+postProcessing(render)
 function intializeDemo_() {
     controls = new PointerLockControls(camera, document.body)
     controls.unlock()
@@ -170,37 +249,6 @@ function displayDescription(index: any) {
     let visibleDiv = document.getElementById('label' + index) as HTMLElement
     visibleDiv.style.display = 'block'
 }
-
-// function makeMove(params: any, index?: any) {
-//     new TWEEN.Tween(camera.position)
-//         .to(
-//             {
-//                 x: params.cameraPosition.x,
-//                 y: params.cameraPosition.y,
-//                 z: params.cameraPosition.z,
-//             },
-//             1000
-//         )
-//         .easing(TWEEN.Easing.Cubic.Out)
-//         .start()
-
-//     new TWEEN.Tween(controls.target)
-//         .to(
-//             {
-//                 x: params.lookAt.x,
-//                 y: params.lookAt.y,
-//                 z: params.lookAt.z,
-//             },
-//             2500
-//         )
-//         .easing(TWEEN.Easing.Cubic.Out)
-//         .start()
-//     if (index != undefined) {
-//         displayDescription(index)
-//     }
-//     // camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
-//     // controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
-// }
 
 function updateOpacity() {}
 
@@ -276,6 +324,7 @@ function animate(now: number) {
     requestAnimationFrame(animate)
     const delta = now - lastTime
     lastTime = now
+
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta)
     if (developerMode) {
@@ -292,6 +341,12 @@ function animate(now: number) {
 }
 
 function render() {
+    renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
+    console.log('composer screen', composerScreen)
+    // composerScreen.render()
+    renderer.clear(false, true, false)
+    renderer.setViewport(20, window.innerHeight - 512, 256, 256)
+    composerMap.render()
     // controls.update(clock.getDelta())
     labelRenderer.render(scene, camera)
     renderer.render(scene, camera)
