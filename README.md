@@ -21,5 +21,11 @@ If you want to explore more,
 
 checkout <b>[FPC repo](https://github.com/pravinpoudel/building-annotation/tree/FPC)</b> where i am struggling so much to get simple things done because this is Scanned Model.
 
+Update:
+
+Added an animated 3D model which dance on playing music
+
+[![Watch the video](https://img.youtube.com/vi/RNmLChDHEyo/default.jpg)](https://youtu.be/RNmLChDHEyo)
+
 
 
