@@ -83,6 +83,9 @@ function init() {
     manager.onProgress = (url, itemsLoaded, itemsTotal) => {
         console.log((itemsLoaded / itemsTotal) * 100 + '% item loaded')
     }
+    manager.onLoad = () => {
+        console.log('Room Loadeded')
+    }
 
     gltfLoader.setPath('./models/').load(
         'scene.gltf',
