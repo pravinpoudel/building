@@ -3,6 +3,7 @@ import { Vec2 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
@@ -25,6 +26,15 @@ let annotationLabels = new Array()
 let pointer: THREE.Vector2 = new THREE.Vector2()
 let controls: OrbitControls
 let annotationSpriteList: Array<THREE.Sprite> = []
+
+// ------------Animation
+let mixerOldGuy: THREE.AnimationMixer
+let oldGuyLoaded: boolean = false
+let ActionLists: Array<THREE.AnimationAction> = []
+let activeAction: THREE.AnimationAction
+let lastAction: THREE.AnimationAction
+
+//
 
 let imageMap: THREE.Texture = new THREE.TextureLoader().load('textures/circle_texture.png')
 window.addEventListener('click', checkAnnotationClick)
@@ -77,8 +87,11 @@ function init() {
         }
     })
     const manager = new THREE.LoadingManager()
+    const fbxManager = new THREE.LoadingManager()
+
     const objLoader = new OBJLoader()
     const gltfLoader = new GLTFLoader(manager)
+    const fbxLoader = new FBXLoader(fbxManager)
 
     manager.onProgress = (url, itemsLoaded, itemsTotal) => {
         console.log((itemsLoaded / itemsTotal) * 100 + '% item loaded')
@@ -116,6 +129,51 @@ function init() {
             console.log(error)
         }
     )
+    const animationListObject = {
+        default: () => setActiveAction(ActionLists[0]),
+        checkTime: () => setActiveAction(ActionLists[1]),
+        Dance: () => setActiveAction(ActionLists[2]),
+    }
+
+    function setActiveAction(action: THREE.AnimationAction) {
+        // check if it is not the one going on right now
+        // if not then change the active to this and stop last action
+    }
+
+    fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
+        // object->animations-> Array(1)->animationclip
+        mixerOldGuy = new THREE.AnimationMixer(object)
+        console.log(object)
+        const action = mixerOldGuy.clipAction(object.animations[0])
+        ActionLists.push(action)
+        activeAction = ActionLists[0]
+        object.traverse(function (child) {
+            if ((child as THREE.Mesh).isMesh) {
+                child.castShadow = true
+                child.receiveShadow = true
+            }
+        })
+        let center = new THREE.Vector3()
+        let size = new THREE.Vector3()
+
+        let box = new THREE.Box3().setFromObject(object) //compute AABB
+        // get it's center and size
+        box.getCenter(center)
+        box.getSize(size)
+
+        let maxSideDimension = Math.max(size.x, size.y, size.z)
+        // normalize the men to unit size
+        object.scale.multiplyScalar(1.0 / maxSideDimension)
+        object.position.y += center.y
+        box.setFromObject(object)
+        box.getCenter(center)
+        box.getSize(size)
+
+        scene.add(object)
+        object.position.y -= center.y / 2
+        object.scale.multiplyScalar(150)
+        // once a scene is loaded load those animation file in chain
+    })
 
     // new MTLLoader().setPath('models/').load('house_water.mtl', function (materials) {
     //     materials.preload()
