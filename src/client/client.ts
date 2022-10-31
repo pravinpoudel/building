@@ -76,29 +76,43 @@ function init() {
             }
         }
     })
-
+    const manager = new THREE.LoadingManager()
     const objLoader = new OBJLoader()
-    const gltfLoader = new GLTFLoader()
+    const gltfLoader = new GLTFLoader(manager)
 
-    gltfLoader.setPath('./models/').load('scene.gltf', function (gltf) {
-        gltf.scene.traverse(function (child) {
-            if (child instanceof THREE.Mesh) {
-                const _child = child as THREE.Mesh
-                _child.castShadow = true
-                _child.receiveShadow = true
-                _child.scale.set(100, 100, 100)
-                sceneObjects.push(_child)
-            }
-            if (child instanceof THREE.Light) {
-                const _light = child as THREE.Light
-                _light.castShadow = true
-                _light.shadow.bias = 0.0008 // to reduce artifact in shadow
-                _light.shadow.mapSize.width = 1024
-                _light.shadow.mapSize.height = 1024
-            }
-        })
-        scene.add(gltf.scene)
-    })
+    manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+        console.log((itemsLoaded / itemsTotal) * 100 + '% item loaded')
+    }
+
+    gltfLoader.setPath('./models/').load(
+        'scene.gltf',
+        function (gltf) {
+            gltf.scene.traverse(function (child) {
+                if (child instanceof THREE.Mesh) {
+                    const _child = child as THREE.Mesh
+                    _child.castShadow = true
+                    _child.receiveShadow = true
+                    _child.scale.set(100, 100, 100)
+                    sceneObjects.push(_child)
+                }
+                if (child instanceof THREE.Light) {
+                    const _light = child as THREE.Light
+                    _light.castShadow = true
+                    _light.shadow.bias = 0.0008 // to reduce artifact in shadow
+                    _light.shadow.mapSize.width = 1024
+                    _light.shadow.mapSize.height = 1024
+                }
+            })
+            scene.add(gltf.scene)
+        },
+        (xhr) => {
+            console.log(xhr.loaded)
+            console.log((xhr.loaded / xhr.total) * 100 + '%loaded')
+        },
+        (error) => {
+            console.log(error)
+        }
+    )
 
     // new MTLLoader().setPath('models/').load('house_water.mtl', function (materials) {
     //     materials.preload()
