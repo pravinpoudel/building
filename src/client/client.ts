@@ -26,18 +26,22 @@ let annotationLabels = new Array()
 let pointer: THREE.Vector2 = new THREE.Vector2()
 let controls: OrbitControls
 let annotationSpriteList: Array<THREE.Sprite> = []
+const clock = new THREE.Clock()
 
 // ------------Animation
 let mixerOldGuy: THREE.AnimationMixer
 let oldGuyLoaded: boolean = false
 let ActionLists: Array<THREE.AnimationAction> = []
 let activeAction: THREE.AnimationAction
-let lastAction: THREE.AnimationAction
+let currentActiveAction: THREE.AnimationAction
 
 //
 
 let imageMap: THREE.Texture = new THREE.TextureLoader().load('textures/circle_texture.png')
 window.addEventListener('click', checkAnnotationClick)
+const animationListObject: any = {
+    default: () => setActiveAction(ActionLists[0]),
+}
 
 function init() {
     scene = addLight(scene)
@@ -129,16 +133,6 @@ function init() {
             console.log(error)
         }
     )
-    const animationListObject = {
-        default: () => setActiveAction(ActionLists[0]),
-        checkTime: () => setActiveAction(ActionLists[1]),
-        Dance: () => setActiveAction(ActionLists[2]),
-    }
-
-    function setActiveAction(action: THREE.AnimationAction) {
-        // check if it is not the one going on right now
-        // if not then change the active to this and stop last action
-    }
 
     fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
         // object->animations-> Array(1)->animationclip
@@ -146,7 +140,7 @@ function init() {
         console.log(object)
         const action = mixerOldGuy.clipAction(object.animations[0])
         ActionLists.push(action)
-        activeAction = ActionLists[0]
+        currentActiveAction = ActionLists[0]
         object.traverse(function (child) {
             if ((child as THREE.Mesh).isMesh) {
                 child.castShadow = true
@@ -165,14 +159,46 @@ function init() {
         // normalize the men to unit size
         object.scale.multiplyScalar(1.0 / maxSideDimension)
         object.position.y += center.y
+        object.position.x = -500
+        object.quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 1.5, 0))
         box.setFromObject(object)
         box.getCenter(center)
         box.getSize(size)
-
-        scene.add(object)
         object.position.y -= center.y / 2
         object.scale.multiplyScalar(150)
+
+        scene.add(object)
+
+        console.log(object.position.x)
         // once a scene is loaded load those animation file in chain
+
+        fbxLoader.load('RumbaDancing.fbx', (object) => {
+            const actionDance = mixerOldGuy.clipAction(object.animations[0])
+            ActionLists.push(actionDance)
+            let pos0 = ActionLists.length - 1
+            animationListObject['dance'] = () => setActiveAction(ActionLists[1])
+            fbxLoader.load('MoveOrder.fbx', (object) => {
+                const actionMoveOrder = mixerOldGuy.clipAction(object.animations[0])
+                ActionLists.push(actionMoveOrder)
+                let pos1 = ActionLists.length - 1
+                animationListObject['moveOrder'] = () => setActiveAction(ActionLists[2])
+                fbxLoader.load('Salute.fbx', (object) => {
+                    const actionSalute = mixerOldGuy.clipAction(object.animations[0])
+                    ActionLists.push(actionSalute)
+                    let pos2 = ActionLists.length - 1
+                    animationListObject['salute'] = () => setActiveAction(ActionLists[3])
+                    fbxLoader.load('Walk.fbx', (object) => {
+                        const actionWalk = mixerOldGuy.clipAction(object.animations[0])
+                        ActionLists.push(actionWalk)
+                        let pos3 = ActionLists.length - 1
+                        animationListObject['walk'] = () => setActiveAction(ActionLists[4])
+                        animationListObject['dance']()
+                        oldGuyLoaded = true
+                        document.getElementById('music')?.click()
+                    })
+                })
+            })
+        })
     })
 
     // new MTLLoader().setPath('models/').load('house_water.mtl', function (materials) {
@@ -198,6 +224,19 @@ function init() {
 function performAnnotation(event: MouseEvent) {
     console.log(event)
     console.log('hello')
+}
+
+function setActiveAction(action: THREE.AnimationAction) {
+    // we can do deep comparision between two object with stringify or lodash isEqual but even first layer equality check is enough for now
+    if (action != currentActiveAction) {
+        currentActiveAction.fadeOut(1)
+        currentActiveAction = action
+        action.reset()
+        action.fadeIn(1)
+        action.play()
+    }
+    // check if it is not the one going on right now
+    // if not then change the active to this and stop last action
 }
 
 function checkAnnotationClick(event: MouseEvent) {
@@ -325,6 +364,9 @@ function onPointerMove(event: MouseEvent) {
 function animate() {
     requestAnimationFrame(animate)
     TWEEN.update()
+    if (oldGuyLoaded) {
+        mixerOldGuy.update(clock.getDelta())
+    }
     controls.update()
     if (developerMode) {
         raycaster.setFromCamera(pointer, camera)
@@ -333,7 +375,7 @@ function animate() {
             let result = new THREE.Vector3()
             camera.getWorldPosition(result)
             console.log(result)
-            console.log(intersects[0].point)
+            console.log('target', intersects[0].point)
         }
     }
     render()
@@ -344,4 +386,9 @@ function render() {
     renderer.render(scene, camera)
 }
 init()
+
+// console.log(audio1)
+// audio1.play()
 animate()
+
+export { animationListObject }

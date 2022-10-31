@@ -1,5 +1,7 @@
 import * as THREE from 'three'
+import { animationListObject } from './client'
 
+let isPlaying = false
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight()
     dirLight_right_near.position.set(5, 80, 10)
@@ -9,7 +11,7 @@ function addLight(scene: THREE.Scene) {
     dirLight_left_far.position.set(50, 80, -10)
     scene.add(dirLight_left_far)
 
-    const ambientLight = new THREE.DirectionalLight(0x404040)
+    const ambientLight = new THREE.AmbientLight(0x999999)
     scene.add(ambientLight)
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1)
@@ -58,5 +60,31 @@ function addAnnotationSprite() {
     let _texture_sprite = new THREE.Sprite(material)
     return _texture_sprite
 }
+let isPlay = false
+
+let audio = new Audio('/audio/jazz.mp3')
+audio.volume = 0.1
+
+document.getElementById('music')?.addEventListener('click', (event) => {
+    event?.preventDefault()
+    if (!isPlay) {
+        audio.play()
+        isPlay = true
+        ;(document.getElementById('stopIcon') as any).style.display = 'none'
+        ;(document.getElementById('playIcon') as any).style.display = 'block'
+        if ('dance' in animationListObject) {
+            animationListObject['dance']()
+        }
+    } else {
+        audio.pause()
+        isPlay = false
+        audio.currentTime = 0
+        ;(document.getElementById('stopIcon') as any).style.display = 'block'
+        ;(document.getElementById('playIcon') as any).style.display = 'none'
+        if ('salute' in animationListObject) {
+            animationListObject['salute']()
+        }
+    }
+})
 
 export { addLight, addCamera, addAnnotationSprite }

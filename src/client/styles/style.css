@@ -58,3 +58,19 @@ button:hover {
     pointer-events: none;
     font-size: 12px;
 }
+
+#music {
+    position: absolute;
+    padding: 20px;
+    right: 10px;
+    top: 10px;
+    color: wheat;
+}
+
+#music i {
+    font-size: 24px;
+}
+
+#stopIcon {
+    display: none;
+}
