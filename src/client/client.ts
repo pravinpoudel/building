@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { Scene, Vec2 } from 'three'
+import { Color, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -10,6 +10,13 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
+import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier'
+// ------------------------ generate octree from the mesh ------------------------------------------ //
+import { Octree } from 'three/examples/jsm/math/Octree'
+import { OctreeHelper } from 'three/examples/jsm/helpers/OctreeHelper'
+//
+// capsule shaped geometry with AABB and intersection check function
+import { Capsule } from 'three/examples/jsm/math/Capsule'
 import * as CANNON from 'cannon-es'
 import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
@@ -57,6 +64,7 @@ let controls: any
 const clock = new THREE.Clock()
 
 let camera: THREE.PerspectiveCamera
+let playerCollider: Capsule
 let raycaster: THREE.Raycaster
 let annotationSprite = new THREE.Sprite()
 let sceneObjects = new Array()
@@ -70,6 +78,10 @@ window.addEventListener('click', checkAnnotationClick)
 
 const menuBoard = document.getElementById('menuBoard') as HTMLDivElement
 let mainscreen = document.getElementById('main-screen') as HTMLElement
+// (start, end, radius)
+playerCollider = new Capsule(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 20, 0), 10)
+const sceneOctree = new Octree()
+const modifier = new SimplifyModifier()
 
 let playerSpeed = 5
 
@@ -118,7 +130,8 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
-        await gltfLoader.setPath('./models/').load('scene.gltf', function (gltf) {
+        await gltfLoader.setPath('./models/').load('nuketown/scene.gltf', function (gltf) {
+            console.log(gltf.scene)
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
                     console.log('hi')
@@ -126,10 +139,14 @@ function init() {
                     // computing bounding box for it's geometry
                     // we only have to compute it's bounding box because this is static mesh
                     _child.geometry.computeBoundingBox() //AABB
-                    _child.castShadow = true
-                    _child.receiveShadow = true
+                    // _child.castShadow = true
+                    // _child.receiveShadow = true
                     _child.scale.set(100, 100, 100)
                     sceneObjects.push(child)
+                    // let verticesToRemove = Math.floor(
+                    //     _child.geometry.attributes.position.count * 0.1
+                    // )
+                    // _child.geometry = modifier.modify(_child.geometry, verticesToRemove)
                 }
                 if (child instanceof THREE.Light) {
                     const _light = child as THREE.Light
@@ -140,12 +157,28 @@ function init() {
                 }
             })
             scene.add(gltf.scene)
+            console.log(scene)
+
+            //     function async(){
+            //         setTimeout( function(){
+            //             addSceneGraph(gltf.scene)
+            //         }, 1000)
+            // }
+            {
+                ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
+                ;(mainscreen as HTMLElement).style.display = 'block'
+            }
         })
-        {
-            ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
-            ;(mainscreen as HTMLElement).style.display = 'block'
-        }
     }
+
+    // function addSceneGraph(gltf) {
+    //     console.log('scene tree creation started')
+    //     sceneOctree.fromGraphNode(gltf.scene)
+    //     console.log('scene octree creation finished')
+    //     const octreeHelper = new OctreeHelper(sceneOctree, new THREE.Color(0xff0000))
+    //     octreeHelper.visible = true
+    //     scene.add(octreeHelper)
+    // }
 
     load_model()
 
