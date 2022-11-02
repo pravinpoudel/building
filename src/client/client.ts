@@ -194,7 +194,6 @@ function init() {
                         animationListObject['walk'] = () => setActiveAction(ActionLists[4])
                         animationListObject['dance']()
                         oldGuyLoaded = true
-                        document.getElementById('music')?.click()
                     })
                 })
             })
@@ -390,5 +389,5 @@ init()
 // console.log(audio1)
 // audio1.play()
 animate()
-
+document.getElementById('music')?.click()
 export { animationListObject }
