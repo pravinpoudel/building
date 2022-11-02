@@ -1,15 +1,15 @@
 import * as THREE from 'three'
 
 function addLight(scene: THREE.Scene) {
-    const dirLight_right_near = new THREE.DirectionalLight()
+    const dirLight_right_near = new THREE.DirectionalLight(new THREE.Color(0xffff))
     dirLight_right_near.position.set(5, 80, 10)
     scene.add(dirLight_right_near)
 
-    const dirLight_left_far = new THREE.DirectionalLight()
+    const dirLight_left_far = new THREE.DirectionalLight(new THREE.Color(0xffff))
     dirLight_left_far.position.set(50, 80, -10)
     scene.add(dirLight_left_far)
 
-    const ambientLight = new THREE.DirectionalLight(0x404040)
+    const ambientLight = new THREE.DirectionalLight(0xffffff)
     scene.add(ambientLight)
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1)

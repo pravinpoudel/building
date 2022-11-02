@@ -130,7 +130,7 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
-        await gltfLoader.setPath('./models/').load('nuketown/scene.gltf', function (gltf) {
+        await gltfLoader.setPath('./models/nuketown/').load('scene.gltf', function (gltf) {
             console.log(gltf.scene)
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
@@ -139,9 +139,9 @@ function init() {
                     // computing bounding box for it's geometry
                     // we only have to compute it's bounding box because this is static mesh
                     _child.geometry.computeBoundingBox() //AABB
-                    // _child.castShadow = true
-                    // _child.receiveShadow = true
-                    _child.scale.set(100, 100, 100)
+                    _child.castShadow = true
+                    _child.receiveShadow = true
+                    _child.scale.set(0.5, 0.5, 0.5)
                     sceneObjects.push(child)
                     // let verticesToRemove = Math.floor(
                     //     _child.geometry.attributes.position.count * 0.1
@@ -157,7 +157,11 @@ function init() {
                 }
             })
             scene.add(gltf.scene)
-            console.log(scene)
+            sceneOctree.fromGraphNode(gltf.scene)
+            console.log('scene octree creation finished')
+            const octreeHelper = new OctreeHelper(sceneOctree, new THREE.Color(0xff0000))
+            octreeHelper.visible = true
+            scene.add(octreeHelper)
 
             //     function async(){
             //         setTimeout( function(){
