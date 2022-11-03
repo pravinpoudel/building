@@ -22,7 +22,7 @@ import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
-import { addLight, addCamera, addAnnotationSprite } from './utils'
+import { addLight, addCamera, addAnnotationSprite, onWindowResize } from './utils'
 import { annotation } from './house_annotation'
 import * as KeyBoardHandler from './KeyInputManager'
 
@@ -54,9 +54,8 @@ let renderTarget = new THREE.WebGLRenderTarget(512, 512, parameters)
 
 renderer.setSize(window.innerWidth, window.innerHeight)
 
-let composerMap
-// -------------------------------------------------------
 let composerScreen
+let composerMap
 
 const labelRenderer = new CSS2DRenderer()
 const developerMode = false
@@ -166,15 +165,6 @@ function init() {
             }
         })
     }
-
-    // function addSceneGraph(gltf) {
-    //     console.log('scene tree creation started')
-    //     sceneOctree.fromGraphNode(gltf.scene)
-    //     console.log('scene octree creation finished')
-    //     const octreeHelper = new OctreeHelper(sceneOctree, new THREE.Color(0xff0000))
-    //     octreeHelper.visible = true
-    //     scene.add(octreeHelper)
-    // }
 
     load_model()
 
@@ -363,14 +353,6 @@ function loadAnnotationIntoScene() {
 
 // loadAnnotationIntoScene()
 
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight
-    camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    labelRenderer.setSize(window.innerWidth, window.innerHeight)
-    render()
-}
-
 function onPointerMove(event: MouseEvent) {
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -387,11 +369,6 @@ function physicsWorld() {
     world.broadphase = new CANNON.SAPBroadphase(world)
     world.defaultContactMaterial.friction = 0
 }
-//-----------------------------------------------------------------------------------------------------------------------
-
-// suppose you made a
-
-// ---------------------------------------------------------------------------------------------------------------
 
 function animate(now: number) {
     requestAnimationFrame(animate)
@@ -426,3 +403,5 @@ registerKeyWrapper()
 document.addEventListener('keydown', keyPressWrapper)
 document.addEventListener('keyup', keyReleaseWrapper)
 window.requestAnimationFrame(animate)
+
+export { camera, renderer, labelRenderer, render }

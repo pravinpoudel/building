@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { camera, renderer, labelRenderer, render } from './client'
 
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight(new THREE.Color(0xffff))
@@ -60,4 +61,12 @@ function addAnnotationSprite() {
     return _texture_sprite
 }
 
-export { addLight, addCamera, addAnnotationSprite }
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    labelRenderer.setSize(window.innerWidth, window.innerHeight)
+    render()
+}
+
+export { addLight, addCamera, addAnnotationSprite, onWindowResize }
