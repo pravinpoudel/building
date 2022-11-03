@@ -385,7 +385,7 @@ let delta
 function render() {
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
     console.log('composer screen', composerScreen)
-    // composerScreen.render()
+    composerScreen.render()
     renderer.clear(false, true, false)
     renderer.setViewport(20, window.innerHeight - 512, 256, 256)
     composerMap.render()
