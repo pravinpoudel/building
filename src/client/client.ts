@@ -131,7 +131,7 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
-        await gltfLoader.setPath('./models/drawing_room/').load('scene.gltf', function (gltf) {
+        await gltfLoader.setPath('./models/nuketown/').load('scene.gltf', function (gltf) {
             console.log(gltf.scene)
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
@@ -142,7 +142,7 @@ function init() {
                     _child.geometry.computeBoundingBox() //AABB
                     _child.castShadow = true
                     _child.receiveShadow = true
-                    _child.scale.set(100, 100, 100)
+                    _child.scale.set(0.5, 0.5, 0.5)
                     sceneObjects.push(child)
                     // let verticesToRemove = Math.floor(
                     //     _child.geometry.attributes.position.count * 0.1
@@ -383,15 +383,12 @@ function animate(now: number) {
 let delta
 
 function render() {
-    delta = Math.min(+clock.getDelta, 0.2)
-    world.step(delta)
-    cannonDebugRenderer.update()
-    composerScreen.render()
+    renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
+    console.log('composer screen', composerScreen)
+    // composerScreen.render()
+    renderer.clear(false, true, false)
+    renderer.setViewport(20, window.innerHeight - 512, 256, 256)
     composerMap.render()
-    // composerScreen.renderer.render(scene, camera)
-    // composerMap.renderer.render(scene, mapCamera)
-
-    // labelRenderer.render(scene, camera)
 }
 physicsWorld()
 const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
