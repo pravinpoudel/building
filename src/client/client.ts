@@ -25,13 +25,15 @@ import * as TWEEN from '@tweenjs/tween.js'
 import { addLight, addCamera, addAnnotationSprite, onWindowResize } from './utils'
 import { annotation } from './house_annotation'
 import * as KeyBoardHandler from './KeyInputManager'
+import { convertFile } from './fileConverter'
 
 import './styles/style.css'
 import { fail } from 'assert'
 
 let scene = new THREE.Scene()
-const renderer = new THREE.WebGLRenderer({ antialias: true })
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
 renderer.physicallyCorrectLights = true
+
 // renderer.gammaFactor = 2.2
 
 renderer.shadowMap.enabled = true
@@ -49,7 +51,7 @@ let parameters: any = {
     stencilBuffer: false,
 }
 
-let renderTarget = new THREE.WebGLRenderTarget(512, 512, parameters)
+let renderTarget = new THREE.WebGLRenderTarget(256, 256, parameters)
 //  it is saying this should match rendertargeta nd composerMap
 
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -108,9 +110,14 @@ function initMapCamera() {
     scene.add(mapCamera)
 }
 
+document.getElementById('gltfInput')?.addEventListener('change', (event) => {
+    const [file] = (document.querySelector('input[type=file]') as HTMLInputElement).files as any
+    convertFile(file)
+})
+
 function init() {
     scene = addLight(scene)
-    scene.background = new THREE.Color(0xffffff)
+    scene.background = new THREE.Color(0xff0000)
     camera = addCamera()
     createCharacter()
     // box.add(camera)
@@ -131,7 +138,7 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
-        await gltfLoader.setPath('./models/nuketown/').load('scene.gltf', function (gltf) {
+        await gltfLoader.setPath('./models/drawing_room/').load('scene.gltf', function (gltf) {
             console.log(gltf.scene)
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
@@ -142,7 +149,7 @@ function init() {
                     _child.geometry.computeBoundingBox() //AABB
                     _child.castShadow = true
                     _child.receiveShadow = true
-                    _child.scale.set(0.5, 0.5, 0.5)
+                    _child.scale.set(100, 100, 100)
                     sceneObjects.push(child)
                     // let verticesToRemove = Math.floor(
                     //     _child.geometry.attributes.position.count * 0.1
@@ -194,18 +201,16 @@ function postProcessing(renderer) {
     // The width and height of the THREE.EffectComposer.renderTarget must match that of the WebGLRenderer.
     // #TODO: WHAT? Why? https://stackoverflow.com/questions/16167897/three-js-how-to-add-copyshader-after-fxaashader-r58
     composerMap = new EffectComposer(renderer, renderTarget)
-    composerMap.setSize(512, 512)
+    composerMap.setSize(256, 256)
     let renderPassMap = new RenderPass(scene, mapCamera)
     composerMap.addPass(renderPassMap)
     var effectFXAA_Map = new ShaderPass(FXAAShader)
-    effectFXAA_Map.uniforms['resolution'].value.set(1 / 512, 1 / 512)
+    effectFXAA_Map.uniforms['resolution'].value.set(1 / 256, 1 / 256)
     composerMap.addPass(effectFXAA_Map)
     const copyPass = new ShaderPass(CopyShader)
     copyPass.renderToScreen = true
     composerMap.addPass(copyPass)
 }
-
-postProcessing(renderer)
 
 function getCenterPoint(mesh) {
     var geometry = mesh.geometry
@@ -384,10 +389,9 @@ let delta
 
 function render() {
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
-    console.log('composer screen', composerScreen)
     composerScreen.render()
     renderer.clear(false, true, false)
-    renderer.setViewport(20, window.innerHeight - 512, 256, 256)
+    renderer.setViewport(20, window.innerHeight - 256, 256, 256)
     composerMap.render()
 }
 physicsWorld()
@@ -395,6 +399,8 @@ const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 init()
 
 initMapCamera()
+
+postProcessing(renderer)
 intializeDemo_()
 registerKeyWrapper()
 document.addEventListener('keydown', keyPressWrapper)
