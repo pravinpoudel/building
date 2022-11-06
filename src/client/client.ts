@@ -486,7 +486,7 @@ function animate(now: number) {
         mixerOldGuy.update(delta)
     }
     TWEEN.update()
-    KeyBoardHandler.keyUpdate(handlers, keys, delta)
+    KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
     if (character) {
         character.position.copy(camera.position)
         // console.log(character.position)
@@ -515,4 +515,4 @@ document.addEventListener('keydown', keyPressWrapper)
 document.addEventListener('keyup', keyReleaseWrapper)
 window.requestAnimationFrame(animate)
 
-export { camera, renderer, labelRenderer, render }
+export { camera, renderer, labelRenderer, render, animationListObject }

@@ -5,11 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Annotation of Scene</title>
     </head>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+        integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    />
 
     <body>
         <div id="loader"></div>
         <div>
-            <input type="file" id="gltfInput"/>
+            <input type="file" id="gltfInput" />
             <span class="content"></span>
         </div>
         <div id="main-screen" style="display: none">
@@ -24,6 +31,10 @@
                     <button id="start-button">Start</button>
                 </div>
             </div>
+        </div>
+        <div id="music">
+            <i id="playIcon" class="fa-sharp fa-solid fa-volume-high"></i>
+            <i id="stopIcon" class="fa-sharp fa-solid fa-volume-xmark"></i>
         </div>
         <div class="container">
             <div id="menu-panel"></div>

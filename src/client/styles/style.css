@@ -89,3 +89,19 @@ button:hover {
     top: 40%;
     right: 40%;
 }
+
+#music {
+    position: absolute;
+    padding: 20px;
+    right: 10px;
+    top: 10px;
+    color: wheat;
+}
+
+#music i {
+    font-size: 24px;
+}
+
+#stopIcon {
+    display: none;
+}
