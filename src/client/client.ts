@@ -29,7 +29,6 @@ import * as KeyBoardHandler from './KeyInputManager'
 import { convertFile } from './fileConverter'
 
 import './styles/style.css'
-import { fail } from 'assert'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -390,7 +389,7 @@ function checkAnnotationClick(event: MouseEvent) {
             const index = intersects[0].object.userData.annotationId
             const annotationData = annotation[index]
             displayDescription(index)
-            // makeMove(annotationData)
+            makeMove(annotationData)
         }
     }
 }
@@ -403,6 +402,46 @@ function displayDescription(index: any) {
     }
     let visibleDiv = document.getElementById('label' + index) as HTMLElement
     visibleDiv.style.display = 'block'
+}
+
+function displayAllDescription() {
+    let allDescDiv = document.getElementsByClassName('description-div')
+    for (let i = 0, length = allDescDiv.length; i < length; i++) {
+        ;(allDescDiv[i] as HTMLElement).style.display = 'block'
+    }
+    // let visibleDiv = document.getElementById('label' + index) as HTMLElement
+    // visibleDiv.style.display = 'block'
+}
+
+function makeMove(params: any, index?: any) {
+    new TWEEN.Tween(camera.position)
+        .to(
+            {
+                x: params.cameraPosition.x,
+                y: params.cameraPosition.y,
+                z: params.cameraPosition.z,
+            },
+            1000
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start()
+
+    new TWEEN.Tween(controls.target)
+        .to(
+            {
+                x: params.lookAt.x,
+                y: params.lookAt.y,
+                z: params.lookAt.z,
+            },
+            2500
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start()
+    if (index != undefined) {
+        displayDescription(index)
+    }
+    // camera.position.set(params.cameraPosition.x, params.cameraPosition.y, params.cameraPosition.z)
+    // controls.target.set(params.lookAt.x, params.lookAt.y, params.lookAt.z)
 }
 
 function updateOpacity() {}
@@ -423,7 +462,7 @@ function loadAnnotationIntoScene() {
             'click',
             () => {
                 console.log('annotation clicked')
-                // makeMove(element, index)
+                makeMove(element, index)
             },
             false
         )
@@ -454,12 +493,13 @@ function loadAnnotationIntoScene() {
         }
         const annotationLabelObject = new CSS2DObject(annotationLableDiv)
         annotationLabelObject.position.set(element.lookAt.x, element.lookAt.y, element.lookAt.z)
-        // annotationLabels.push(annotationLabelObject)
+        annotationLabels.push(annotationLabelObject)
         scene.add(annotationLabelObject)
     })
 }
 
-// loadAnnotationIntoScene()
+loadAnnotationIntoScene()
+displayAllDescription()
 
 function onPointerMove(event: MouseEvent) {
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -500,6 +540,7 @@ function render(delta) {
     renderer.clear(false, true, false)
     renderer.setViewport(20, window.innerHeight - 256, 256, 256)
     composerMap.render(delta)
+    labelRenderer.render(scene, camera)
     // scene.background = new THREE.Color(0xffffff)
 }
 physicsWorld()

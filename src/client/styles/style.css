@@ -11,8 +11,8 @@ body {
 
 #menu-panel {
     position: absolute;
-    top: 60px;
-    left: 4px;
+    bottom: 20px;
+    /* left: 0px; */
     width: auto;
     height: auto;
     color: white;
@@ -54,7 +54,7 @@ button:hover {
     min-width: 200px;
     padding: 10px;
     color: rgb(218, 213, 203);
-    display: none;
+    /* display: none; */
     pointer-events: none;
     font-size: 12px;
 }
