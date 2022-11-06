@@ -3,6 +3,7 @@ import { Color, FloatType, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 // post proceesing helping tools
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
@@ -106,6 +107,97 @@ let right = 1024,
 
 let character
 let aspectRatio = _width / _height
+
+// --------------- Animation
+let mixerOldGuy: THREE.AnimationMixer
+let oldGuyLoaded: boolean = false
+let ActionLists: Array<THREE.AnimationAction> = []
+let activeAction: THREE.AnimationAction
+let currentActiveAction: THREE.AnimationAction
+const animationListObject: any = {
+    default: () => setActiveAction(ActionLists[0]),
+}
+
+//----------------------------------------------------------------------
+function setActiveAction(action: THREE.AnimationAction) {
+    // we can do deep comparision between two object with stringify or lodash isEqual but even first layer equality check is enough for now
+    if (action != currentActiveAction) {
+        currentActiveAction.fadeOut(1)
+        currentActiveAction = action
+        action.reset()
+        action.fadeIn(1)
+        action.play()
+    }
+    // check if it is not the one going on right now
+    // if not then change the active to this and stop last action
+}
+const fbxManager = new THREE.LoadingManager()
+const fbxLoader = new FBXLoader(fbxManager)
+fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
+    // object->animations-> Array(1)->animationclip
+    mixerOldGuy = new THREE.AnimationMixer(object)
+    console.log(object)
+    const action = mixerOldGuy.clipAction(object.animations[0])
+    ActionLists.push(action)
+    currentActiveAction = ActionLists[0]
+    object.traverse(function (child) {
+        if ((child as THREE.Mesh).isMesh) {
+            child.castShadow = true
+            child.receiveShadow = true
+        }
+    })
+    let center = new THREE.Vector3()
+    let size = new THREE.Vector3()
+
+    let box = new THREE.Box3().setFromObject(object) //compute AABB
+    // get it's center and size
+    box.getCenter(center)
+    box.getSize(size)
+
+    let maxSideDimension = Math.max(size.x, size.y, size.z)
+    // normalize the men to unit size
+    object.scale.multiplyScalar(1.0 / maxSideDimension)
+    object.position.y += center.y
+    object.position.x = -500
+    object.quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 1.5, 0))
+    box.setFromObject(object)
+    box.getCenter(center)
+    box.getSize(size)
+    object.position.y -= center.y / 2
+    object.scale.multiplyScalar(150)
+
+    scene.add(object)
+
+    console.log(object.position.x)
+    // once a scene is loaded load those animation file in chain
+
+    fbxLoader.load('RumbaDancing.fbx', (object) => {
+        const actionDance = mixerOldGuy.clipAction(object.animations[0])
+        ActionLists.push(actionDance)
+        let pos0 = ActionLists.length - 1
+        animationListObject['dance'] = () => setActiveAction(ActionLists[1])
+        fbxLoader.load('MoveOrder.fbx', (object) => {
+            const actionMoveOrder = mixerOldGuy.clipAction(object.animations[0])
+            ActionLists.push(actionMoveOrder)
+            let pos1 = ActionLists.length - 1
+            animationListObject['moveOrder'] = () => setActiveAction(ActionLists[2])
+            fbxLoader.load('Salute.fbx', (object) => {
+                const actionSalute = mixerOldGuy.clipAction(object.animations[0])
+                ActionLists.push(actionSalute)
+                let pos2 = ActionLists.length - 1
+                animationListObject['salute'] = () => setActiveAction(ActionLists[3])
+                fbxLoader.load('Walk.fbx', (object) => {
+                    const actionWalk = mixerOldGuy.clipAction(object.animations[0])
+                    ActionLists.push(actionWalk)
+                    let pos3 = ActionLists.length - 1
+                    animationListObject['walk'] = () => setActiveAction(ActionLists[4])
+                    animationListObject['dance']()
+                    oldGuyLoaded = true
+                })
+            })
+        })
+    })
+})
 
 function initMapCamera() {
     mapCamera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000)
@@ -389,8 +481,10 @@ function physicsWorld() {
 function animate(now: number) {
     requestAnimationFrame(animate)
     // world.step(timeStep)
-    const delta = now - lastTime
-    lastTime = now
+    const delta = clock.getDelta()
+    if (oldGuyLoaded) {
+        mixerOldGuy.update(delta)
+    }
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta)
     if (character) {
