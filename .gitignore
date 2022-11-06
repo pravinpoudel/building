@@ -3,3 +3,4 @@ node_modules
 *.mtl
 dist/client/models/astronaut
 dist/client/models/drawing_room
+dist/client/models/oldPerson
