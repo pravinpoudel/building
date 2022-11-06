@@ -29,6 +29,7 @@ import * as KeyBoardHandler from './KeyInputManager'
 import { convertFile } from './fileConverter'
 
 import './styles/style.css'
+import { Console } from 'console'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -78,7 +79,6 @@ let pointer: THREE.Vector2 = new THREE.Vector2()
 let annotationSpriteList: Array<THREE.Sprite> = []
 
 let imageMap: THREE.Texture = new THREE.TextureLoader().load('textures/circle_texture.png')
-window.addEventListener('click', checkAnnotationClick)
 
 const menuBoard = document.getElementById('menuBoard') as HTMLDivElement
 let mainscreen = document.getElementById('main-screen') as HTMLElement
@@ -388,7 +388,7 @@ function checkAnnotationClick(event: MouseEvent) {
         if (intersects[0].object.userData.annotationId != undefined) {
             const index = intersects[0].object.userData.annotationId
             const annotationData = annotation[index]
-            displayDescription(index)
+            // displayDescription(index)
             makeMove(annotationData)
         }
     }
@@ -397,6 +397,7 @@ function checkAnnotationClick(event: MouseEvent) {
 function displayDescription(index: any) {
     console.log(index)
     let allDescDiv = document.getElementsByClassName('description-div')
+    console.log(allDescDiv)
     for (let i = 0, length = allDescDiv.length; i < length; i++) {
         ;(allDescDiv[i] as HTMLElement).style.display = 'none'
     }
@@ -414,7 +415,7 @@ function displayAllDescription() {
 }
 
 function makeMove(params: any, index?: any) {
-    new TWEEN.Tween(camera.position)
+    new TWEEN.Tween(controls.getObject().position)
         .to(
             {
                 x: params.cameraPosition.x,
@@ -425,18 +426,35 @@ function makeMove(params: any, index?: any) {
         )
         .easing(TWEEN.Easing.Cubic.Out)
         .start()
+        .onUpdate(() => {
+            controls.getObject().lookAt(params.lookAt.x, params.lookAt.z, params.lookAt.z)
+            controls.getObject().updateProjectionMatrix()
+        })
 
-    new TWEEN.Tween(controls.target)
-        .to(
-            {
-                x: params.lookAt.x,
-                y: params.lookAt.y,
-                z: params.lookAt.z,
-            },
-            2500
-        )
-        .easing(TWEEN.Easing.Cubic.Out)
-        .start()
+    // manual way of calculating lookat of the camera
+    var vector = new THREE.Vector3(0, 0, -1)
+    vector.applyQuaternion(camera.quaternion)
+
+    let rotateY = vector.angleTo(
+        new THREE.Vector3(params.lookAt.x, params.lookAt.y, params.lookAt.z)
+    )
+    // finding lookat of a pointer lock controls camera
+    let v = new THREE.Vector3()
+    controls.getDirection(v)
+
+    // new TWEEN.Tween(camera.lookAt)
+    //     .to(
+    //         {
+    //             x: params.lookAt.x,
+    //             y: params.lookAt.y,
+    //             z: params.lookAt.z,
+    //         },
+    //         2500
+    //     )
+    //     .easing(TWEEN.Easing.Cubic.Out)
+    //     .start()
+    //     .onUpdate(controls.getObject().updateProjectionMatrix())
+
     if (index != undefined) {
         displayDescription(index)
     }
@@ -500,6 +518,7 @@ function loadAnnotationIntoScene() {
 
 loadAnnotationIntoScene()
 displayAllDescription()
+window.addEventListener('click', checkAnnotationClick)
 
 function onPointerMove(event: MouseEvent) {
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1
