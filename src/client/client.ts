@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { Color, Scene, Vec2 } from 'three'
+import { Color, FloatType, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -37,7 +37,7 @@ renderer.physicallyCorrectLights = true
 // renderer.gammaFactor = 2.2
 
 renderer.shadowMap.enabled = true
-renderer.outputEncoding = THREE.sRGBEncoding
+// renderer.outputEncoding = THREE.sRGBEncoding
 
 let world
 const timeStep = 1 / 60
@@ -47,8 +47,9 @@ renderer.autoClear = false
 let parameters: any = {
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
-    format: THREE.RGBFormat,
+    format: THREE.RGBAFormat,
     stencilBuffer: false,
+    type: FloatType,
 }
 
 let renderTarget = new THREE.WebGLRenderTarget(256, 256, parameters)
@@ -61,7 +62,7 @@ let composerMap
 
 const labelRenderer = new CSS2DRenderer()
 const developerMode = false
-let characterSize = 20
+let characterSize = new THREE.Vector3(100, 250, 100)
 let box: THREE.Mesh
 let controls: any
 const clock = new THREE.Clock()
@@ -96,18 +97,26 @@ let mapCamera,
     mapSizeX = 128,
     mapSizeY = 64
 
+let _width = window.innerWidth
+let _height = window.innerHeight
 let right = 1024,
     left = -1024,
     top = 1024,
     bottom = -1024
 
+let character
+let aspectRatio = _width / _height
+
 function initMapCamera() {
     mapCamera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000)
     // for camera to see down up should be on z axis
-    mapCamera.up = new THREE.Vector3(0, 0, -1)
-    mapCamera.lookAt(0, 0, 0)
-    mapCamera.position.y = 512
+    mapCamera.up = new THREE.Vector3(0, 0, 1)
+    mapCamera.lookAt(0, -1, 0)
+    mapCamera.position.set(0, 0, 0)
+    mapCamera.position.y = 500
     scene.add(mapCamera)
+    const helper = new THREE.CameraHelper(mapCamera)
+    scene.add(helper)
 }
 
 document.getElementById('gltfInput')?.addEventListener('change', (event) => {
@@ -117,7 +126,7 @@ document.getElementById('gltfInput')?.addEventListener('change', (event) => {
 
 function init() {
     scene = addLight(scene)
-    scene.background = new THREE.Color(0xff0000)
+    scene.background = new THREE.Color(0xffffff)
     camera = addCamera()
     createCharacter()
     // box.add(camera)
@@ -257,10 +266,12 @@ function intializeDemo_() {
 }
 
 function createCharacter() {
-    var geometry = new THREE.BoxBufferGeometry(characterSize, characterSize, characterSize)
-    var material = new THREE.MeshPhongMaterial({ color: 0x22dd88 })
-    box = new THREE.Mesh(geometry, material)
-    box.position.y = characterSize / 2
+    var geometry = new THREE.BoxGeometry(characterSize.x, characterSize.y, characterSize.z)
+    var material = new THREE.MeshPhongMaterial({ color: 0xffffff })
+    character = new THREE.Mesh(geometry, material)
+    character.position.copy(camera.position)
+    character.position.z = -227
+    scene.add(character)
 }
 function performAnnotation(event: MouseEvent) {
     console.log(event)
@@ -382,17 +393,20 @@ function animate(now: number) {
     lastTime = now
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta)
-    render()
+    if (character) {
+        character.position.copy(camera.position)
+        // console.log(character.position)
+    }
+    render(delta)
 }
 
-let delta
-
-function render() {
+function render(delta) {
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
-    composerScreen.render()
+    composerScreen.render(delta)
     renderer.clear(false, true, false)
     renderer.setViewport(20, window.innerHeight - 256, 256, 256)
-    composerMap.render()
+    composerMap.render(delta)
+    // scene.background = new THREE.Color(0xffffff)
 }
 physicsWorld()
 const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
