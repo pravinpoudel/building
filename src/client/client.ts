@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { Color, FloatType, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
+
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
@@ -11,11 +13,13 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
+import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader'
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier'
 // ------------------------ generate octree from the mesh ------------------------------------------ //
 import { Octree } from 'three/examples/jsm/math/Octree'
 import { OctreeHelper } from 'three/examples/jsm/helpers/OctreeHelper'
-//
+
+import { VRButton } from 'three/examples/jsm/webxr/VRButton'
 // capsule shaped geometry with AABB and intersection check function
 import { Capsule } from 'three/examples/jsm/math/Capsule'
 import * as CANNON from 'cannon-es'
@@ -23,13 +27,21 @@ import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
-import { addLight, addCamera, addAnnotationSprite, onWindowResize } from './utils'
+
+import {
+    addLight,
+    addCamera,
+    addAnnotationSprite,
+    onWindowResize,
+    createPhysicsBody,
+    initDragController,
+} from './utils'
+
 import { annotation } from './house_annotation'
 import * as KeyBoardHandler from './KeyInputManager'
 import { convertFile } from './fileConverter'
 
 import './styles/style.css'
-import { Console } from 'console'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -116,6 +128,17 @@ let currentActiveAction: THREE.AnimationAction
 const animationListObject: any = {
     default: () => setActiveAction(ActionLists[0]),
 }
+// ;(navigator.xr as XRSystem)
+//     .isSessionSupported('immersive-vr')
+//     .then((isSupported) => {
+//         if (isSupported) {
+//             document.body.appendChild(VRButton.createButton(renderer))
+//             renderer.xr.enabled = true
+//         }
+//     })
+//     .catch((err) => {
+//         console.log('Immersive VR is not supported: ' + err)
+//     })
 
 //----------------------------------------------------------------------
 function setActiveAction(action: THREE.AnimationAction) {
@@ -206,8 +229,8 @@ function initMapCamera() {
     mapCamera.position.set(0, 0, 0)
     mapCamera.position.y = 500
     scene.add(mapCamera)
-    const helper = new THREE.CameraHelper(mapCamera)
-    scene.add(helper)
+    // const helper = new THREE.CameraHelper(mapCamera)
+    // scene.add(helper)
 }
 
 document.getElementById('gltfInput')?.addEventListener('change', (event) => {
@@ -291,10 +314,13 @@ function postProcessing(renderer) {
     fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio)
     fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio)
     const copyPass1 = new ShaderPass(CopyShader)
+    const gammaCorrectionPass = new ShaderPass(GammaCorrectionShader)
+
     // meaning of renderToScreen. I have to set to true only for the 'last' effect
     copyPass1.renderToScreen = true
     composerScreen.addPass(renderPass)
     composerScreen.addPass(fxaaPass)
+    composerScreen.addPass(gammaCorrectionPass)
     composerScreen.addPass(copyPass1)
     // when screen is resized update fxaa resolution uniform as well
 
@@ -307,6 +333,7 @@ function postProcessing(renderer) {
     var effectFXAA_Map = new ShaderPass(FXAAShader)
     effectFXAA_Map.uniforms['resolution'].value.set(1 / 256, 1 / 256)
     composerMap.addPass(effectFXAA_Map)
+    composerMap.addPass(gammaCorrectionPass)
     const copyPass = new ShaderPass(CopyShader)
     copyPass.renderToScreen = true
     composerMap.addPass(copyPass)
@@ -331,29 +358,37 @@ function FPCUnLockHandler() {
 let cotrolOptions = {
     FPC: true,
 }
+
+function createPhysicsBodyWrapper(event) {
+    createPhysicsBody(event)
+}
+
 function intializeDemo_() {
     controls = new PointerLockControls(camera, document.body)
     controls.unlock()
     controls.addEventListener('lock', FPCLockHandler)
     controls.addEventListener('unlock', FPCLockHandler)
 
+    renderer.domElement.addEventListener('dblclick', createPhysicsBodyWrapper)
+
     document.getElementById('start-button')?.addEventListener('click', () => {
         if (cotrolOptions.FPC == true) {
             controls.lock()
         }
         // when user enter into the scene
-        sceneObjects.forEach((element, index) => {
-            let itemsBody: CANNON.Body = new CANNON.Body({
-                mass: 0,
-                shape: new CANNON.Sphere(5),
-            })
-            let target = new THREE.Vector3()
-            target = getCenterPoint(element)
-            itemsBody.position.copy(new CANNON.Vec3(target.x, target.y, target.z))
-            world.addBody(itemsBody)
-            RoomsItemBody.push(itemsBody)
-        })
+        // sceneObjects.forEach((element, index) => {
+        //     let itemsBody: CANNON.Body = new CANNON.Body({
+        //         mass: 0,
+        //         shape: new CANNON.Sphere(5),
+        //     })
+        //     let target = new THREE.Vector3()
+        //     target = getCenterPoint(element)
+        //     itemsBody.position.copy(new CANNON.Vec3(target.x, target.y, target.z))
+        //     world.addBody(itemsBody)
+        //     RoomsItemBody.push(itemsBody)
+        // })
     })
+    // initDragController()
 }
 
 function createCharacter() {
@@ -362,6 +397,7 @@ function createCharacter() {
     character = new THREE.Mesh(geometry, material)
     character.position.copy(camera.position)
     character.position.z = -227
+    camera.add(character)
     scene.add(character)
 }
 function performAnnotation(event: MouseEvent) {
@@ -544,6 +580,8 @@ function animate(now: number) {
     if (oldGuyLoaded) {
         mixerOldGuy.update(delta)
     }
+    // console.log(cannonDebugRenderer)
+    cannonDebugRenderer.update()
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
     if (character) {
@@ -575,4 +613,16 @@ document.addEventListener('keydown', keyPressWrapper)
 document.addEventListener('keyup', keyReleaseWrapper)
 window.requestAnimationFrame(animate)
 
-export { camera, renderer, labelRenderer, render, animationListObject }
+export {
+    camera,
+    renderer,
+    labelRenderer,
+    render,
+    animationListObject,
+    pointer,
+    raycaster,
+    sceneObjects,
+    world,
+    controls,
+    clock,
+}

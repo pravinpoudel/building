@@ -10,6 +10,7 @@
 
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
+import { sceneObjects } from './client'
 
 export default class CannonDebugRenderer {
     public scene: THREE.Scene
@@ -38,7 +39,7 @@ export default class CannonDebugRenderer {
 
         this._material = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
-            wireframe: true,
+            wireframe: false,
         })
         this._particleMaterial = new THREE.PointsMaterial({
             color: 0xff0000,
@@ -55,7 +56,7 @@ export default class CannonDebugRenderer {
     }
 
     public update() {
-        const bodies: CANNON.Body[] = this.world.bodies
+        const bodies: any[] = this.world.bodies
         const meshes: THREE.Mesh[] | THREE.Points[] = this._meshes
         const shapeWorldPosition: CANNON.Vec3 = this.tmpVec0
         const shapeWorldQuaternion: CANNON.Quaternion = this.tmpQuat0
@@ -64,11 +65,12 @@ export default class CannonDebugRenderer {
 
         for (let i = 0; i !== bodies.length; i++) {
             const body = bodies[i]
+            const name = bodies[i].name
 
             for (let j = 0; j !== body.shapes.length; j++) {
                 const shape = body.shapes[j]
 
-                this._updateMesh(meshIndex, body, shape)
+                this._updateMesh(meshIndex, body, shape, i)
 
                 const mesh = meshes[meshIndex]
 
@@ -104,14 +106,15 @@ export default class CannonDebugRenderer {
         meshes.length = meshIndex
     }
 
-    private _updateMesh(index: number, body: CANNON.Body, shape: CANNON.Shape) {
+    private _updateMesh(index: number, body: CANNON.Body, shape: CANNON.Shape, i: number) {
         let mesh = this._meshes[index]
+        // mesh.userData = { name }
         if (!this._typeMatch(mesh, shape)) {
             if (mesh) {
                 //console.log(shape.type)
                 this.scene.remove(mesh)
             }
-            mesh = this._meshes[index] = this._createMesh(shape)
+            mesh = this._meshes[index] = this._createMesh(shape, i)
         }
         this._scaleMesh(mesh, shape)
     }
@@ -132,7 +135,7 @@ export default class CannonDebugRenderer {
         )
     }
 
-    private _createMesh(shape: CANNON.Shape): THREE.Mesh | THREE.Points {
+    private _createMesh(shape: CANNON.Shape, i: number): THREE.Mesh | THREE.Points {
         let mesh: THREE.Mesh | THREE.Points
         let geometry: THREE.BufferGeometry
         let v0: CANNON.Vec3
@@ -252,7 +255,9 @@ export default class CannonDebugRenderer {
         }
 
         if (mesh && mesh.geometry) {
+            mesh.userData = { index: i }
             this.scene.add(mesh)
+            sceneObjects.push(mesh)
         }
 
         return mesh
