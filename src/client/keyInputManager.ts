@@ -130,9 +130,9 @@ function registerKey(controls, handlers, keys, playerSpeed) {
         function (elapsedTime) {
             console.log('moving up')
             let cameraWorldPositionY = controls.getObject().position.y
-            if (cameraWorldPositionY < 500) {
-                controls.getObject().position.y += playerSpeed * elapsedTime * 0.01
-            }
+            // if (cameraWorldPositionY < 500) {
+            controls.getObject().position.y += playerSpeed * elapsedTime * 0.01
+            // }
         },
         function (elapsedTime) {}
     )
@@ -143,9 +143,10 @@ function registerKey(controls, handlers, keys, playerSpeed) {
         function (elapsedTime) {
             console.log('mocing down')
             let cameraWorldPositionY = controls.getObject().position.y
-            if (cameraWorldPositionY > 50.0) {
-                controls.getObject().position.y -= playerSpeed * elapsedTime * 0.01
-            }
+            console.log(cameraWorldPositionY)
+            // if (cameraWorldPositionY > 50.0) {
+            controls.getObject().position.y -= playerSpeed * elapsedTime * 0.01
+            // }
         },
         function (elapsedTime) {}
     )

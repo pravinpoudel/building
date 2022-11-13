@@ -39,7 +39,7 @@ export default class CannonDebugRenderer {
 
         this._material = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
-            wireframe: false,
+            wireframe: true,
         })
         this._particleMaterial = new THREE.PointsMaterial({
             color: 0xff0000,

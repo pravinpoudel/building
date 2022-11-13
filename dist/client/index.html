@@ -15,8 +15,14 @@
 
     <body>
         <div id="loader"></div>
+        <div id="control-info">
+            <span>
+                "CTRL" - to deselect everything | "H" - translate | "J" - rotate <br />
+                "K" - scale | "L" : First Person controller | "P" - to get pointer
+            </span>
+        </div>
         <div class="slidecontainer">
-            <input type="range" min="1" max="10" value="1" class="slider" id="myRange" />
+            <input type="range" min="0" max="1000" value="200" class="slider" id="myRange" />
             <p>Scale: <span id="scaleDisplay"></span></p>
         </div>
 
@@ -40,6 +46,12 @@
         <div id="music">
             <i id="playIcon" class="fa-sharp fa-solid fa-volume-high"></i>
             <i id="stopIcon" class="fa-sharp fa-solid fa-volume-xmark"></i>
+        </div>
+        <div class="make-mesh-div">
+            <ul title="Add Element">
+                <li data-id="sphere">Sphere</li>
+                <li data-id="box">Box</li>
+            </ul>
         </div>
         <div class="container">
             <div id="menu-panel"></div>

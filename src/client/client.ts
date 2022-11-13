@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Color, FloatType, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -78,6 +79,7 @@ const developerMode = false
 let characterSize = new THREE.Vector3(100, 250, 100)
 let box: THREE.Mesh
 let controls: any
+let orbitControls: OrbitControls
 const clock = new THREE.Clock()
 
 let camera: THREE.PerspectiveCamera
@@ -369,6 +371,11 @@ function intializeDemo_() {
     controls.addEventListener('lock', FPCLockHandler)
     controls.addEventListener('unlock', FPCLockHandler)
 
+    orbitControls = new OrbitControls(camera, renderer.domElement)
+    orbitControls.enableDamping = true
+    orbitControls.dampingFactor = 0.05
+    orbitControls.enabled = false
+
     renderer.domElement.addEventListener('dblclick', createPhysicsBodyWrapper)
 
     document.getElementById('start-button')?.addEventListener('click', () => {
@@ -577,6 +584,9 @@ function animate(now: number) {
     requestAnimationFrame(animate)
     // world.step(timeStep)
     const delta = clock.getDelta()
+    if (orbitControls.enabled) {
+        orbitControls.update()
+    }
     if (oldGuyLoaded) {
         mixerOldGuy.update(delta)
     }
@@ -625,4 +635,6 @@ export {
     world,
     controls,
     clock,
+    scene,
+    orbitControls,
 }

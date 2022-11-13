@@ -153,3 +153,39 @@ button:hover {
     color: white;
     font-weight: bold;
 }
+
+.make-mesh-div {
+    width: fit-content;
+    position: fixed;
+    right: 25px;
+    bottom: 50px;
+    background-color: #d3d3d3;
+    font-weight: bold;
+    padding: 12px 20px;
+}
+.make-mesh-div ul {
+    padding-inline-start: 0px;
+}
+
+.make-mesh-div li {
+    padding: 12px 10px;
+    border-bottom: 1px solid;
+    cursor: pointer;
+}
+.slidecontainer {
+    display: none;
+}
+
+#control-info {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    padding: 10px;
+    line-height: 34px;
+    color: white;
+    font-family: monospace;
+    box-sizing: border-box;
+    text-align: center;
+    user-select: none;
+    pointer-events: none;
+}

@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
+
 import { Raycaster } from 'three'
 import {
     camera,
@@ -13,18 +15,28 @@ import {
     world,
     controls,
     clock,
+    scene,
+    orbitControls,
 } from './client'
 
 import * as CANNON from 'cannon-es'
 import { ConvexPolyhedron, Cylinder, Heightfield, Material, Plane, Sphere } from 'cannon-es'
+import * as TWEEN from '@tweenjs/tween.js'
 let control1
 let isPlaying = false
 const mouse = new THREE.Vector2()
 let originalScaleReference
+let originalSizeReferenceBox
 let selectedMesh
 let enableSelection = false
 let physicsObjects: Array<THREE.Mesh> = []
 let dragControls
+let shape: any = new CANNON.Box(new CANNON.Vec3(5, 5, 5))
+let myShape = 'BOX'
+let defaultSize = 10
+let defaultRadius = 5
+let transformControl
+let canTransform = false
 
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight(new THREE.Color(0xffff))
@@ -129,39 +141,63 @@ const shapeList = {
 }
 
 function editPhysicsBody() {
-    output.innerHTML = slider.value
-    let scaleFactor = +slider.value as number
+    let value = Math.max(+slider.value / 200, 0.2)
+    output.innerHTML = '' + value
+    let scaleFactor = value
     if (selectedMesh) {
         let selectionBodyIndex = selectedMesh.userData.index
         let previousElement = world.bodies[selectionBodyIndex]
         // create new element
         let newRadius = scaleFactor * originalScaleReference
-        // let _shape = shapeList[previousElement.shapes[0].type](newRadius)
-        // let newBody = new CANNON.Body({
-        //     mass: 0,
-        //     shape: _shape,
-        // })
-        // newBody.position.copy(new CANNON.Vec3())
-        // world.bodies[selectionBodyIndex] = newBody
-        console.log()
-        previousElement.shapes[0].radius = newRadius
-        previousElement.shapes[0].boundingSphereRadiusNeedsUpdate = true
-        // console.log(newBody)
-        // update new into old one
+        let xScale = newRadius
+        let yScale = newRadius
+        let zScale = newRadius
 
-        // world.bodies[selectionBodyIndex] =
-        console.log(newRadius)
+        if (myShape == 'BOX') {
+            xScale = originalSizeReferenceBox.x * value
+            yScale = originalSizeReferenceBox.y * value
+            zScale = originalSizeReferenceBox.z * value
+        }
+        let newBody = scalePhysicsBody(previousElement, xScale, yScale, zScale)
     }
+}
+
+function scalePhysicsBody(movingBody, x, y, z) {
+    let currentShape = movingBody.shapes[0]
+    movingBody.removeShape(currentShape)
+    if (myShape == 'SPHERE') {
+        currentShape.radius = Math.max(x, y, z)
+        movingBody.addShape(currentShape)
+    } else if (myShape == 'BOX') {
+        // let x1 = currentShape.halfExtents.x *x
+        // let y1 = currentShape.halfExtents.y *
+        // let z1 = currentShape.halfExtents.z
+        currentShape.halfExtents.set(x / 2, y / 2, z / 2)
+        movingBody.addShape(currentShape)
+    }
+    return movingBody
 }
 
 function movePhysicsBody() {
     if (selectedMesh) {
         let selectionBodyIndex = selectedMesh.userData.index
         let movingBody = world.bodies[selectionBodyIndex]
+        // copy tranalation
         movingBody.position.x = selectedMesh.position.x
         movingBody.position.y = selectedMesh.position.y
         movingBody.position.z = selectedMesh.position.z
-        console.log(movingBody.position)
+        // copy rotation
+        movingBody.quaternion.copy(selectedMesh.quaternion)
+        // copy scaling
+        console.log('scale is ', selectedMesh.scale)
+        movingBody = scalePhysicsBody(
+            movingBody,
+            selectedMesh.scale.x,
+            selectedMesh.scale.y,
+            selectedMesh.scale.z
+        )
+        // movingBody.scale.copy(selectedMesh.scale)
+        console.log(movingBody)
     }
 }
 
@@ -181,16 +217,77 @@ function createPhysicsBody(e: MouseEvent) {
             console.log(world.bodies[intersect3D.userData.index])
             selectedMesh = intersect3D
             physicsObjects = [selectedMesh]
-            initDragController()
+            if (transformControl != null) {
+                transformControl.detach()
+            }
+            transformControl = new TransformControls(camera, renderer.domElement)
+
+            transformControl.addEventListener('change', () => {
+                movePhysicsBody()
+            })
+            ;(document.getElementsByClassName('slidecontainer')[0] as HTMLElement).style.display =
+                'block'
+            window.addEventListener('mousemove', onMouseMove, false)
+            window.addEventListener('keydown', onKeyDown)
+            window.addEventListener('keyup', onKeyUp)
+
+            transformControl.addEventListener('dragging-changed', function (event) {
+                orbitControls.enabled = !event.value
+                console.log(' can you transform ?: Answer is ', canTransform)
+            })
+            transformControl.attach(selectedMesh)
+            // console.log('the axis is', transformControl.axis)
+            // transformControl.space = 'local'
+            orbitControls.enabled = true
+            // get it by tween
+            new TWEEN.Tween(orbitControls.target)
+                .to(
+                    {
+                        x: selectedMesh.position.x,
+                        y: selectedMesh.position.y,
+                        z: selectedMesh.position.z,
+                    },
+                    2000
+                )
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start()
+                .onUpdate(() => {
+                    // controls.getObject().lookAt(params.lookAt.x, params.lookAt.z, params.lookAt.z)
+                    controls.getObject().updateProjectionMatrix()
+                })
+            controls.disconnect()
+            // dragControls.deactive()
+            scene.add(transformControl)
+            // initDragController()
             let selectionBodyIndex = selectedMesh.userData.index
             let previousElement = world.bodies[selectionBodyIndex]
-            originalScaleReference = previousElement.shapes[0].radius
-            ;((intersect3D as any).material as any).color = new THREE.Color(0xff0000)
+            if (myShape == 'SPHERE') {
+                originalScaleReference = previousElement.shapes[0].radius
+            }
+
+            if (myShape == 'BOX') {
+                originalSizeReferenceBox = {
+                    x: previousElement.shapes[0].halfExtents.x,
+                    y: previousElement.shapes[0].halfExtents.y,
+                    z: previousElement.shapes[0].halfExtents.z,
+                }
+                console.log('original size is', originalSizeReferenceBox)
+            }
+            let material1 = selectedMesh.material
+            material1.color = new THREE.Color(0xffd300)
+            selectedMesh.material = material1
         } else {
             let point = intersection.point
+            if (selectedMesh != undefined) {
+                ;((selectedMesh as any).material as any).color = new THREE.Color(0x00ff00)
+            }
+            if (transformControl != undefined) {
+                transformControl.detach()
+            }
+            selectedMesh = undefined
             let itemsBody = new CANNON.Body({
                 mass: 0,
-                shape: new CANNON.Sphere(5),
+                shape: shape,
             })
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })
             console.log(itemsBodycopy)
@@ -213,28 +310,58 @@ function dragPhysicsObject() {
 }
 
 function onKeyDown(event) {
-    console.log(event.keyCode)
-    if (event.keyCode === 16) {
-        enableSelection = true
-    } else if (event.keyCode == 71 && selectedMesh != undefined) {
+    let code = event.keyCode
+    if (selectedMesh == undefined) {
+        return
+    }
+    if (code === 'Escape') {
+        orbitControls.enabled = false
+        controls.connect()
+    } else if (code === 16) {
+        transformControl.setMode('translate')
+    } else if (code == 71) {
         selectedMesh.material.wireframe = true
-    } else if (event.keyCode == 72 && selectedMesh != undefined) {
-        selectedMesh.material.wireframe = false
-    } else {
-        console.log(' you are awesome')
+    } else if (code == 74) {
+        console.log('rotation selected')
+        transformControl.setMode('rotate')
+    } else if (code == 72) {
+        console.log('translation selected')
+        transformControl.setMode('translate')
+    } else if (code == 75) {
+        console.log('scale selected')
+        transformControl.setMode('scale')
+    } else if (code == 187 || code == 107) {
+        transformControl.setSize(transformControl.size + 0.1)
+    } else if (code == 189 || code == 109) {
+        transformControl.setSize(Math.max(transformControl.size - 0.1, 0.1))
+    } else if (code == 88) {
+        transformControl.showX = !transformControl.showX
+    } else if (code == 89) {
+        transformControl.showY = !transformControl.showY
+    } else if (code == 90) {
+        transformControl.showZ = !transformControl.showZ
+    } else if (code == 27) {
+        transformControl.reset()
     }
 }
 
 function onKeyUp(event) {
-    if (event.keyCode === 16) enableSelection = false
+    if (event.keyCode === 16) {
+        enableSelection = false
+        transformControl.setTranslationSnap(null)
+    }
     if (event.keyCode == 17) {
         console.log('ctrl pressed')
         if (selectedMesh) {
             let mesh1 = selectedMesh
             mesh1.material.wireframe = true
-            mesh1.material.color = new THREE.Color(0x00ff00)
+            mesh1.material.color = new THREE.Color(0x22ff22)
             selectedMesh = undefined
+            transformControl.detach()
         }
+        transformControl.setTranslationSnap(null)
+        transformControl.setRotationSnap(null)
+        transformControl.setScaleSnap(null)
     }
 }
 
@@ -276,17 +403,55 @@ function onKeyUp(event) {
 //     render()
 // }
 
+function onMouseMove(event) {
+    var mouse = new THREE.Vector2()
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+    var raycaster = new THREE.Raycaster()
+    var intersects = new THREE.Vector3()
+    if (enableSelection) {
+        var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+        scene.add(new THREE.PlaneHelper(plane, 100000, 0xffff00))
+        raycaster.setFromCamera(mouse, camera)
+        raycaster.ray.intersectPlane(plane, intersects)
+        console.log(enableSelection)
+        console.log(intersects)
+        selectedMesh.position.set(intersects.x, intersects.y, intersects.z)
+        movePhysicsBody()
+    }
+}
+
 function initDragController() {
     dragControls = new DragControls(physicsObjects, camera, renderer.domElement)
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
     dragControls.addEventListener('dragstart', function () {
-        controls.disconnect()
+        // controls.disconnect()
     })
     dragControls.addEventListener('drag', dragPhysicsObject)
     dragControls.addEventListener('dragend', function () {
         controls.connect()
     })
+}
+
+const shapeHash = {
+    SPHERE: (scale) => {
+        if (scale == undefined || scale <= 0) {
+            scale = defaultRadius
+        }
+        return new CANNON.Sphere(scale)
+    },
+    BOX: (scale) => {
+        if (scale == undefined || scale <= 0) {
+            scale = defaultSize
+        }
+        return new CANNON.Box(new CANNON.Vec3(scale / 2, scale / 2, scale / 2))
+    },
+}
+
+function addElementHandler(event) {
+    event.preventDefault()
+    myShape = event.target.dataset.id
+    myShape = myShape.toUpperCase()
+    shape = shapeHash[myShape](10)
 }
 
 function onWindowResize() {
@@ -299,7 +464,11 @@ function onWindowResize() {
 
 var slider = document.getElementById('myRange') as HTMLInputElement
 var output = document.getElementById('scaleDisplay') as HTMLSpanElement
-output.innerHTML = slider.value
+console.log(slider.value)
+output.innerHTML = '' + +slider.value / 200
+
+let addElement = document.getElementsByClassName('make-mesh-div')[0]
+addElement.addEventListener('click', addElementHandler)
 
 slider.oninput = function () {
     editPhysicsBody()
