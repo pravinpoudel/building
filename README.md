@@ -11,9 +11,9 @@ Astronaut 3D GLTF model rendered which need to be annotated:
 [![Watch the video](https://img.youtube.com/vi/twamMzWmlDs/default.jpg)](https://youtu.be/twamMzWmlDs)
 
 
-Things to avoid or take care:
+## Things to avoid or take care:
 
-1. Origin of the Mesh:
+### Origin of the Mesh:
 
 Origin of the mesh is the one thing that should be taken care of.
 
