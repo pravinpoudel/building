@@ -8,6 +8,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 // post proceesing helping tools
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
@@ -142,6 +143,14 @@ const animationListObject: any = {
 //         console.log('Immersive VR is not supported: ' + err)
 //     })
 
+// const gltfPipeline = require('gltf-pipeline')
+// const fsExtra = require('fs-extra')
+// const gltfToGlb = gltfPipeline.gltfToGlb
+// const gltf = fsExtra.readJsonSync('./models/drawing_room/scene.gltf')
+// gltfToGlb(gltf).then(function (results) {
+//     fsExtra.writeFileSync('model.glb', results.glb)
+// })
+
 //----------------------------------------------------------------------
 function setActiveAction(action: THREE.AnimationAction) {
     // we can do deep comparision between two object with stringify or lodash isEqual but even first layer equality check is enough for now
@@ -157,6 +166,9 @@ function setActiveAction(action: THREE.AnimationAction) {
 }
 const fbxManager = new THREE.LoadingManager()
 const fbxLoader = new FBXLoader(fbxManager)
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('draco/')
+
 fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
     // object->animations-> Array(1)->animationclip
     mixerOldGuy = new THREE.AnimationMixer(object)
@@ -263,12 +275,14 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
+        // gltfLoader.setDRACOLoader(dracoLoader)
         await gltfLoader.setPath('./models/drawing_room/').load('scene.gltf', function (gltf) {
-            console.log(gltf.scene)
+            console.log(gltf.scene.children[0])
+            const modifier = new SimplifyModifier()
             gltf.scene.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
-                    console.log('hi')
                     const _child = child as THREE.Mesh
+
                     // computing bounding box for it's geometry
                     // we only have to compute it's bounding box because this is static mesh
                     _child.geometry.computeBoundingBox() //AABB
@@ -578,12 +592,19 @@ function physicsWorld() {
     // negative value in y axis make it go down
     world.broadphase = new CANNON.SAPBroadphase(world)
     world.defaultContactMaterial.friction = 0
+
+    const planeShape = new CANNON.Plane()
+    const planeBody = new CANNON.Body({ mass: 0 })
+    planeBody.addShape(planeShape)
+    planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+    world.addBody(planeBody)
 }
 
 function animate(now: number) {
     requestAnimationFrame(animate)
-    // world.step(timeStep)
-    const delta = clock.getDelta()
+    let delta = clock.getDelta()
+    delta = Math.max(delta, 0.1)
+    world.step(delta)
     if (orbitControls.enabled) {
         orbitControls.update()
     }
