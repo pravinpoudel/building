@@ -6,6 +6,18 @@ Astronaut 3D GLTF model rendered which need to be annotated:
 
 ![Screenshot](screenshots/roman.png)
 
+### Update
+42MB scanned model with 24MB texture image
+        |
+        |
+        |
+       \|/
+11MB GLB model
+
+this will be added to the pipeline when there will be functionality to upload your own model
+
+Bravo !! 
+
 ## Video demo:
 
 [![Watch the video](https://img.youtube.com/vi/twamMzWmlDs/default.jpg)](https://youtu.be/twamMzWmlDs)
@@ -26,3 +38,5 @@ but we need floor physics model because we don't want anything to penetrate floo
 Since this floor is not at origin, adding plane at orgin will look like this:
 
 ![image](https://user-images.githubusercontent.com/11494733/201652912-418ce406-4e9c-44d6-9e26-ecd4286ad16e.png)
+
+
