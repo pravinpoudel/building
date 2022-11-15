@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
-
 import { Raycaster } from 'three'
 import {
     camera,
@@ -22,6 +21,7 @@ import {
 import * as CANNON from 'cannon-es'
 import { ConvexPolyhedron, Cylinder, Heightfield, Material, Plane, Sphere } from 'cannon-es'
 import * as TWEEN from '@tweenjs/tween.js'
+
 let control1
 let isPlaying = false
 const mouse = new THREE.Vector2()
@@ -473,6 +473,18 @@ addElement.addEventListener('click', addElementHandler)
 slider.oninput = function () {
     editPhysicsBody()
 }
+
+async function comrpessImage(url) {
+    // const fileLoaded = await fs.readFile(
+    //     './models/drawing_room/textures/model_Material_u1_v1_baseColor.jpeg'
+    // )
+    // const image = imagePool.ingestImage(fileLoaded)
+    // await image.preprocess(encodeOptions)
+    // const rawEncodedImage = image.encodedWith.mozjpeg.binary
+    // fs.writeFile('./models/drawing_room/textures//compressed_image.jpg', rawEncodedImage)
+}
+
+// comrpessImage('hello')
 
 export {
     addLight,

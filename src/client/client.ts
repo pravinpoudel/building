@@ -275,41 +275,44 @@ function init() {
 
     async function load_model() {
         const gltfLoader = new GLTFLoader()
-        // gltfLoader.setDRACOLoader(dracoLoader)
-        await gltfLoader.setPath('./models/drawing_room/').load('scene.gltf', function (gltf) {
-            console.log(gltf.scene.children[0])
-            const modifier = new SimplifyModifier()
-            gltf.scene.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    const _child = child as THREE.Mesh
+        gltfLoader.setDRACOLoader(dracoLoader)
+        await gltfLoader
+            .setPath('./models/drawing_room/')
+            .load('scene-merged-draco.glb', function (gltf) {
+                console.log(gltf.scene.children[0])
+                const modifier = new SimplifyModifier()
+                gltf.scene.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        const _child = child as THREE.Mesh
 
-                    // computing bounding box for it's geometry
-                    // we only have to compute it's bounding box because this is static mesh
-                    _child.geometry.computeBoundingBox() //AABB
-                    _child.castShadow = true
-                    _child.receiveShadow = true
-                    _child.scale.set(100, 100, 100)
-                    sceneObjects.push(child)
-                    // let verticesToRemove = Math.floor(
-                    //     _child.geometry.attributes.position.count * 0.1
-                    // )
-                    // _child.geometry = modifier.modify(_child.geometry, verticesToRemove)
-                }
-                if (child instanceof THREE.Light) {
-                    const _light = child as THREE.Light
-                    _light.castShadow = true
-                    _light.shadow.bias = 0.0008 // to reduce artifact in shadow
-                    _light.shadow.mapSize.width = 1024
-                    _light.shadow.mapSize.height = 1024
+                        // computing bounding box for it's geometry
+                        // we only have to compute it's bounding box because this is static mesh
+                        _child.geometry.computeBoundingBox() //AABB
+                        _child.castShadow = true
+                        _child.receiveShadow = true
+                        _child.scale.set(100, 100, 100)
+                        sceneObjects.push(child)
+                        // let verticesToRemove = Math.floor(
+                        //     _child.geometry.attributes.position.count * 0.1
+                        // )
+                        // _child.geometry = modifier.modify(_child.geometry, verticesToRemove)
+                    }
+                    if (child instanceof THREE.Light) {
+                        const _light = child as THREE.Light
+                        _light.castShadow = true
+                        _light.shadow.bias = 0.0008 // to reduce artifact in shadow
+                        _light.shadow.mapSize.width = 1024
+                        _light.shadow.mapSize.height = 1024
+                    }
+                })
+                gltf.scene.translateY
+                scene.add(gltf.scene)
+
+                {
+                    ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
+                    ;(mainscreen as HTMLElement).style.display = 'block'
                 }
             })
-            scene.add(gltf.scene)
-
-            {
-                ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
-                ;(mainscreen as HTMLElement).style.display = 'block'
-            }
-        })
     }
 
     load_model()

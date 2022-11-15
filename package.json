@@ -26,9 +26,13 @@
     "webpack-merge": "^5.8.0"
   },
   "dependencies": {
+    "@squoosh/lib": "^0.4.0",
     "@tweenjs/tween.js": "^18.6.4",
+    "browser-image-compression": "^2.0.0",
     "cannon-es": "^0.20.0",
+    "compress-images": "^2.0.5",
     "express": "^4.17.3",
-    "fs-extra": "^10.1.0"
+    "fs-extra": "^10.1.0",
+    "gltfpack": "^0.18.0"
   }
 }
