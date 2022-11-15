@@ -7,16 +7,19 @@ Astronaut 3D GLTF model rendered which need to be annotated:
 ![Screenshot](screenshots/roman.png)
 
 ### Update
-42MB scanned model with 24MB texture image
-        |
-        |
-        |
-       \|/
-11MB GLB model
+```diff
+- original 42MB scanned model with 24MB texture <br>
+      |
+      |  
+      |
+     \|/ 
+- 11MB compressed GLB model
+```
 
 this will be added to the pipeline when there will be functionality to upload your own model
-
-Bravo !! 
+```diff
++ Bravo !! 
+```
 
 ## Video demo:
 
