@@ -37,6 +37,8 @@ let defaultSize = 10
 let defaultRadius = 5
 let transformControl
 let canTransform = false
+let isSphere = false
+let isBox = true
 
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight(new THREE.Color(0xffff))
@@ -189,7 +191,7 @@ function movePhysicsBody() {
         // copy rotation
         movingBody.quaternion.copy(selectedMesh.quaternion)
         // copy scaling
-        console.log('scale is ', selectedMesh.scale)
+        // console.log('scale is ', selectedMesh.scale)
         movingBody = scalePhysicsBody(
             movingBody,
             selectedMesh.scale.x,
@@ -197,7 +199,7 @@ function movePhysicsBody() {
             selectedMesh.scale.z
         )
         // movingBody.scale.copy(selectedMesh.scale)
-        console.log(movingBody)
+        // console.log(movingBody)
     }
 }
 
@@ -285,9 +287,18 @@ function createPhysicsBody(e: MouseEvent) {
                 transformControl.detach()
             }
             selectedMesh = undefined
+            let shape1
+            if (isBox) {
+                shape1 = new CANNON.Box(new CANNON.Vec3(5, 5, 5))
+            }
+
+            if (isSphere) {
+                shape1 = new CANNON.Sphere(10)
+            }
+
             let itemsBody = new CANNON.Body({
-                mass: 0,
-                shape: shape,
+                mass: 1,
+                shape: shape1,
             })
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })
             console.log(itemsBodycopy)
@@ -443,6 +454,7 @@ const shapeHash = {
         if (scale == undefined || scale <= 0) {
             scale = defaultSize
         }
+        console.log('the box size is ', scale, scale, scale)
         return new CANNON.Box(new CANNON.Vec3(scale / 2, scale / 2, scale / 2))
     },
 }
@@ -451,6 +463,15 @@ function addElementHandler(event) {
     event.preventDefault()
     myShape = event.target.dataset.id
     myShape = myShape.toUpperCase()
+    if (myShape == 'BOX') {
+        isBox = true
+        isSphere = false
+    }
+
+    if (myShape == 'SPHERE') {
+        isSphere = true
+        isBox = false
+    }
     shape = shapeHash[myShape](10)
 }
 

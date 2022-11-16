@@ -180,6 +180,7 @@ fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
         if ((child as THREE.Mesh).isMesh) {
             child.castShadow = true
             child.receiveShadow = true
+            child.matrixAutoUpdate = false
         }
     })
     let center = new THREE.Vector3()
@@ -600,6 +601,7 @@ function physicsWorld() {
     const planeBody = new CANNON.Body({ mass: 0 })
     planeBody.addShape(planeShape)
     planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+    planeBody.position.y += 50
     world.addBody(planeBody)
 }
 
