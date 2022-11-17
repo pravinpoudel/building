@@ -189,3 +189,16 @@ button:hover {
     user-select: none;
     pointer-events: none;
 }
+
+#drop_test {
+    position: absolute;
+    right: 20px;
+    top: 100px;
+    cursor: pointer;
+    color: wheat;
+    border: 1 px white;
+}
+
+#drop_test button {
+    padding: 10px;
+}

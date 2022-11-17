@@ -168,16 +168,11 @@ function scalePhysicsBody(movingBody, x, y, z) {
     let currentShape = movingBody.shapes[0]
     movingBody.removeShape(currentShape)
     if (myShape == 'SPHERE') {
-        currentShape.radius = Math.max(x, y, z)
-        movingBody.addShape(currentShape)
+        let newradius = Math.max(x, y, z)
+        movingBody.addShape(new CANNON.Sphere(newradius))
     } else if (myShape == 'BOX') {
-        // let x1 = currentShape.halfExtents.x *x
-        // let y1 = currentShape.halfExtents.y *
-        // let z1 = currentShape.halfExtents.z
-        currentShape.halfExtents.set(x / 2, y / 2, z / 2)
-        movingBody.addShape(currentShape)
+        movingBody.addShape(new CANNON.Box(new CANNON.Vec3(x / 2, y / 2, z / 2)))
     }
-    return movingBody
 }
 
 function movePhysicsBody() {
@@ -223,6 +218,7 @@ function createPhysicsBody(e: MouseEvent) {
                 transformControl.detach()
             }
             transformControl = new TransformControls(camera, renderer.domElement)
+            transformControl.space = 'local'
 
             transformControl.addEventListener('change', () => {
                 movePhysicsBody()
@@ -237,6 +233,7 @@ function createPhysicsBody(e: MouseEvent) {
                 orbitControls.enabled = !event.value
                 console.log(' can you transform ?: Answer is ', canTransform)
             })
+
             transformControl.attach(selectedMesh)
             // console.log('the axis is', transformControl.axis)
             // transformControl.space = 'local'
@@ -297,7 +294,7 @@ function createPhysicsBody(e: MouseEvent) {
             }
 
             let itemsBody = new CANNON.Body({
-                mass: 1,
+                mass: 0,
                 shape: shape1,
             })
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })
@@ -443,21 +440,21 @@ function initDragController() {
     })
 }
 
-const shapeHash = {
-    SPHERE: (scale) => {
-        if (scale == undefined || scale <= 0) {
-            scale = defaultRadius
-        }
-        return new CANNON.Sphere(scale)
-    },
-    BOX: (scale) => {
-        if (scale == undefined || scale <= 0) {
-            scale = defaultSize
-        }
-        console.log('the box size is ', scale, scale, scale)
-        return new CANNON.Box(new CANNON.Vec3(scale / 2, scale / 2, scale / 2))
-    },
-}
+// const shapeHash = {
+//     SPHERE: (scale) => {
+//         if (scale == undefined || scale <= 0) {
+//             scale = defaultRadius
+//         }
+//         return new CANNON.Sphere(scale)
+//     },
+//     BOX: (scale) => {
+//         if (scale == undefined || scale <= 0) {
+//             scale = defaultSize
+//         }
+//         console.log('the box size is ', scale, scale, scale)
+//         return new CANNON.Box(new CANNON.Vec3(scale / 2, scale / 2, scale / 2))
+//     },
+// }
 
 function addElementHandler(event) {
     event.preventDefault()
@@ -472,7 +469,7 @@ function addElementHandler(event) {
         isSphere = true
         isBox = false
     }
-    shape = shapeHash[myShape](10)
+    // shape = shapeHash[myShape](10)
 }
 
 function onWindowResize() {

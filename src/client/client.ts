@@ -122,6 +122,10 @@ let right = 1024,
 let character
 let aspectRatio = _width / _height
 
+let ballBodies: Array<CANNON.Body> = []
+let balls: Array<THREE.Mesh> = []
+let ballAdded = false
+let isDebuggerVisible = true
 // --------------- Animation
 let mixerOldGuy: THREE.AnimationMixer
 let oldGuyLoaded: boolean = false
@@ -308,12 +312,34 @@ function init() {
                 })
                 gltf.scene.translateY
                 scene.add(gltf.scene)
-
-                {
-                    ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
-                    ;(mainscreen as HTMLElement).style.display = 'block'
-                }
+                ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
+                ;(mainscreen as HTMLElement).style.display = 'block'
+                document
+                    .getElementById('drop_test_btn')
+                    ?.addEventListener('click', drop_test_handler)
             })
+    }
+
+    function drop_test_handler() {
+        let geometry = new THREE.SphereGeometry(5, 232, 32)
+        let material = new THREE.MeshStandardMaterial({
+            color: 0x0000ff,
+            roughness: 0,
+        })
+        let ball = new THREE.Mesh(geometry, material)
+        ball.position.set(275, 500, -121)
+        ball.name = 'my-sphere'
+        scene.add(ball)
+        balls.push(ball)
+
+        let ballBody = new CANNON.Body({
+            mass: 1,
+            shape: new CANNON.Sphere(5),
+        })
+        ballBody.position.set(ball.position.x, ball.position.y, ball.position.z)
+        world.addBody(ballBody)
+        ballBodies.push(ballBody)
+        ballAdded = true
     }
 
     load_model()
@@ -610,6 +636,15 @@ function animate(now: number) {
     let delta = clock.getDelta()
     delta = Math.max(delta, 0.1)
     world.step(delta)
+    if (ballAdded) {
+        balls.forEach((element, index) => {
+            element.position.set(
+                ballBodies[index].position.x,
+                ballBodies[index].position.y,
+                ballBodies[index].position.z
+            )
+        })
+    }
     if (orbitControls.enabled) {
         orbitControls.update()
     }
@@ -617,6 +652,7 @@ function animate(now: number) {
         mixerOldGuy.update(delta)
     }
     // console.log(cannonDebugRenderer)
+
     cannonDebugRenderer.update()
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
@@ -637,7 +673,7 @@ function render(delta) {
     // scene.background = new THREE.Color(0xffffff)
 }
 physicsWorld()
-const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
+let cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 init()
 
 initMapCamera()
