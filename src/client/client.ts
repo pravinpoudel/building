@@ -47,6 +47,7 @@ import './styles/style.css'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+renderer.xr.enabled = true
 renderer.physicallyCorrectLights = true
 
 // renderer.gammaFactor = 2.2
@@ -135,17 +136,17 @@ let currentActiveAction: THREE.AnimationAction
 const animationListObject: any = {
     default: () => setActiveAction(ActionLists[0]),
 }
-// ;(navigator.xr as XRSystem)
-//     .isSessionSupported('immersive-vr')
-//     .then((isSupported) => {
-//         if (isSupported) {
-//             document.body.appendChild(VRButton.createButton(renderer))
-//             renderer.xr.enabled = true
-//         }
-//     })
-//     .catch((err) => {
-//         console.log('Immersive VR is not supported: ' + err)
-//     })
+;(navigator.xr as XRSystem)
+    .isSessionSupported('immersive-vr')
+    .then((isSupported) => {
+        if (isSupported) {
+            document.body.appendChild(VRButton.createButton(renderer))
+            renderer.xr.enabled = true
+        }
+    })
+    .catch((err) => {
+        console.log('Immersive VR is not supported: ' + err)
+    })
 
 // const gltfPipeline = require('gltf-pipeline')
 // const fsExtra = require('fs-extra')
@@ -632,7 +633,7 @@ function physicsWorld() {
 }
 
 function animate(now: number) {
-    requestAnimationFrame(animate)
+    // requestAnimationFrame(animate)
     let delta = clock.getDelta()
     delta = Math.max(delta, 0.1)
     world.step(delta)
@@ -664,11 +665,12 @@ function animate(now: number) {
 }
 
 function render(delta) {
-    renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
-    composerScreen.render(delta)
-    renderer.clear(false, true, false)
-    renderer.setViewport(20, window.innerHeight - 256, 256, 256)
-    composerMap.render(delta)
+    // renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
+    // composerScreen.render(delta)
+    // renderer.clear(false, true, false)
+    // renderer.setViewport(20, window.innerHeight - 256, 256, 256)
+    // composerMap.render(delta)
+    renderer.render(scene, camera)
     labelRenderer.render(scene, camera)
     // scene.background = new THREE.Color(0xffffff)
 }
@@ -678,13 +680,29 @@ init()
 
 initMapCamera()
 
+const xrManager = renderer.xr,
+    baseReferenceSpace = xrManager.getReferenceSpace(),
+    offsetPosition = camera!.position,
+    offsetRotation = camera!.rotation
+
+const transform = new XRRigidTransform(offsetPosition, {
+        x: offsetRotation.x,
+        y: -(offsetRotation.y + pos - 0.5),
+        z: offsetRotation.z,
+        w: offsetRotation.w,
+    }),
+    //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
+    teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
+
+xrManager.setReferenceSpace(teleportSpaceOffset)
+
 postProcessing(renderer)
 intializeDemo_()
 registerKeyWrapper()
 document.addEventListener('keydown', keyPressWrapper)
 document.addEventListener('keyup', keyReleaseWrapper)
-window.requestAnimationFrame(animate)
-
+// window.requestAnimationFrame(animate)
+renderer.setAnimationLoop(animate)
 export {
     camera,
     renderer,
