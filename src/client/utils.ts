@@ -166,12 +166,16 @@ function editPhysicsBody() {
 
 function scalePhysicsBody(movingBody, x, y, z) {
     let currentShape = movingBody.shapes[0]
-    movingBody.removeShape(currentShape)
+    // movingBody.removeShape(currentShape)
     if (myShape == 'SPHERE') {
         let newradius = Math.max(x, y, z)
-        movingBody.addShape(new CANNON.Sphere(newradius))
+        currentShape.radius = newradius
+        currentShape.updateBoundingSphereRadius()
+        movingBody.updateBoundingRadius()
     } else if (myShape == 'BOX') {
-        movingBody.addShape(new CANNON.Box(new CANNON.Vec3(x / 2, y / 2, z / 2)))
+        currentShape.halfExtents.set(Math.abs(x / 2), Math.abs(y / 2), Math.abs(z / 2))
+        currentShape.updateConvexPolyhedronRepresentation()
+        movingBody.updateBoundingRadius()
     }
 }
 
@@ -294,7 +298,7 @@ function createPhysicsBody(e: MouseEvent) {
             }
 
             let itemsBody = new CANNON.Body({
-                mass: 0,
+                mass: 1,
                 shape: shape1,
             })
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })
