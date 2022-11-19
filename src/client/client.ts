@@ -187,6 +187,7 @@ function buildControllers() {
 
     for (let i = 0; i < 2; i++) {
         const _controller = renderer.xr.getController(i)
+        _controller.add(line.clone())
         _controller.name = 'controller' + (i + 1)
         _controller.userData.selectPressed = false
         _controller.userData.selectPressedPrev = false
@@ -207,15 +208,20 @@ function initVR() {
         controller.addEventListener('selectend', selectEndHandler)
     })
 }
+initVR()
 
-function selectStartHandler() {
-    ;(this as THREE.XRTargetRaySpace).children[0].scale.z = 10
-    :(this as THREE.XRTargetRaySpace).userData.selectPressed = true
+function selectStartHandler(event) {
+    const controller = event.target
+    console.log(controller)
+    controller.children[0].scale.z = 10
+    controller.userData.selectPressed = true
 }
 
-function selectEndHandler() {
-    this.children[0].scale.z = 0
-    this.userData.selectPressed = false
+function selectEndHandler(event) {
+    const controller = event.target
+
+    controller.children[0].scale.z = 0
+    controller.userData.selectPressed = false
 }
 
 const fbxManager = new THREE.LoadingManager()
@@ -729,16 +735,16 @@ init()
 
 initMapCamera()
 
-const transform = new XRRigidTransform(offsetPosition, {
-        x: offsetRotation.x,
-        y: -offsetRotation.y,
-        z: offsetRotation.z,
-        w: offsetRotation.w,
-    }),
-    //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
-    teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
+// const transform = new XRRigidTransform(offsetPosition, {
+//         x: offsetRotation.x,
+//         y: -offsetRotation.y,
+//         z: offsetRotation.z,
+//         w: offsetRotation.w,
+//     }),
+//     //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
+//     teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
 
-xrManager.setReferenceSpace(teleportSpaceOffset)
+// xrManager.setReferenceSpace(teleportSpaceOffset)
 
 postProcessing(renderer)
 intializeDemo_()
