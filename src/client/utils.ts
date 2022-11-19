@@ -166,9 +166,13 @@ function editPhysicsBody() {
 
 function scalePhysicsBody(movingBody, x, y, z) {
     let currentShape = movingBody.shapes[0]
-    // movingBody.removeShape(currentShape)
     if (myShape == 'SPHERE') {
-        let newradius = Math.max(x, y, z)
+        let newradius = x
+        if (x != y && x == z) {
+            newradius = y
+        } else if (x == y && y != z) {
+            newradius = z
+        }
         currentShape.radius = newradius
         currentShape.updateBoundingSphereRadius()
         movingBody.updateBoundingRadius()
@@ -197,9 +201,9 @@ function movePhysicsBody() {
             selectedMesh.scale.y,
             selectedMesh.scale.z
         )
-        // movingBody.scale.copy(selectedMesh.scale)
-        // console.log(movingBody)
     }
+    // movingBody.scale.copy(selectedMesh.scale)
+    // console.log(movingBody)
 }
 
 function createPhysicsBody(e: MouseEvent) {
@@ -298,7 +302,7 @@ function createPhysicsBody(e: MouseEvent) {
             }
 
             let itemsBody = new CANNON.Body({
-                mass: 1,
+                mass: 0,
                 shape: shape1,
             })
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })

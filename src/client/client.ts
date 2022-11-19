@@ -3,6 +3,7 @@ import { Color, FloatType, Scene, Vec2 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import Stats from 'three/examples/jsm/libs/stats.module'
 
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -631,6 +632,16 @@ function physicsWorld() {
     world.addBody(planeBody)
 }
 
+const stats_fps = Stats()
+stats_fps.showPanel(0)
+stats_fps.domElement.style.cssText = 'position:absolute;top:0px;right:0px;'
+document.body.appendChild(stats_fps.domElement)
+
+const stats_mb = Stats()
+stats_mb.showPanel(2)
+stats_mb.domElement.style.cssText = 'position:absolute;top:50px;right:0px;'
+document.body.appendChild(stats_mb.domElement)
+
 function animate(now: number) {
     requestAnimationFrame(animate)
     let delta = clock.getDelta()
@@ -660,6 +671,8 @@ function animate(now: number) {
         character.position.copy(camera.position)
         // console.log(character.position)
     }
+    stats_fps.update()
+    stats_mb.update()
     render(delta)
 }
 
