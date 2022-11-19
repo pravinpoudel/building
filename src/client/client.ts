@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { Color, FloatType, Scene, Vec2 } from 'three'
+import { BufferGeometry, Color, FloatType, Line, Scene, Vec2, Vector3 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -22,6 +22,7 @@ import { Octree } from 'three/examples/jsm/math/Octree'
 import { OctreeHelper } from 'three/examples/jsm/helpers/OctreeHelper'
 
 import { VRButton } from 'three/examples/jsm/webxr/VRButton'
+import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory'
 // capsule shaped geometry with AABB and intersection check function
 import { Capsule } from 'three/examples/jsm/math/Capsule'
 import * as CANNON from 'cannon-es'
@@ -103,6 +104,9 @@ playerCollider = new Capsule(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 20
 const sceneOctree = new Octree()
 const modifier = new SimplifyModifier()
 
+// VR
+let controllers: Array<any> = []
+
 let playerSpeed = 5
 
 let keys: any = {}
@@ -169,6 +173,51 @@ function setActiveAction(action: THREE.AnimationAction) {
     // check if it is not the one going on right now
     // if not then change the active to this and stop last action
 }
+
+function buildControllers() {
+    const controllerModelFactory = new XRControllerModelFactory()
+    const controllers: Array<any> = []
+
+    const rayGeometry = new BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, -1),
+    ])
+    const line = new Line(rayGeometry)
+    line.scale.z = 10
+
+    for (let i = 0; i < 2; i++) {
+        const _controller = renderer.xr.getController(i)
+        _controller.name = 'controller' + (i + 1)
+        _controller.userData.selectPressed = false
+        _controller.userData.selectPressedPrev = false
+        // add ray in it
+        scene.add(_controller)
+        controllers.push(_controller)
+        const grip = renderer.xr.getControllerGrip(i)
+        grip.add(controllerModelFactory.createControllerModel(grip))
+        scene.add(grip)
+    }
+    return controllers
+}
+
+function initVR() {
+    controllers = buildControllers()
+    controllers.forEach(function (controller, index) {
+        controller.addEventListener('selectstart', selectStartHandler)
+        controller.addEventListener('selectend', selectEndHandler)
+    })
+}
+
+function selectStartHandler() {
+    ;(this as THREE.XRTargetRaySpace).children[0].scale.z = 10
+    :(this as THREE.XRTargetRaySpace).userData.selectPressed = true
+}
+
+function selectEndHandler() {
+    this.children[0].scale.z = 0
+    this.userData.selectPressed = false
+}
+
 const fbxManager = new THREE.LoadingManager()
 const fbxLoader = new FBXLoader(fbxManager)
 const dracoLoader = new DRACOLoader()
@@ -680,14 +729,9 @@ init()
 
 initMapCamera()
 
-const xrManager = renderer.xr,
-    baseReferenceSpace = xrManager.getReferenceSpace(),
-    offsetPosition = camera!.position,
-    offsetRotation = camera!.rotation
-
 const transform = new XRRigidTransform(offsetPosition, {
         x: offsetRotation.x,
-        y: -(offsetRotation.y + pos - 0.5),
+        y: -offsetRotation.y,
         z: offsetRotation.z,
         w: offsetRotation.w,
     }),
