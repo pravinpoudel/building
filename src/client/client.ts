@@ -56,16 +56,18 @@ import * as KeyBoardHandler from './KeyInputManager'
 import { convertFile } from './fileConverter'
 
 import './styles/style.css'
+import { group } from 'console'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
 renderer.xr.enabled = true
 renderer.physicallyCorrectLights = true
+renderer.xr.setReferenceSpaceType('local-floor')
 
 // renderer.gammaFactor = 2.2
 
 renderer.shadowMap.enabled = true
-// renderer.outputEncoding = THREE.sRGBEncoding
+renderer.outputEncoding = THREE.sRGBEncoding
 
 let world
 const timeStep = 1 / 60
@@ -151,6 +153,8 @@ let currentActiveAction: THREE.AnimationAction
 const animationListObject: any = {
     default: () => setActiveAction(ActionLists[0]),
 }
+let user = new THREE.Group()
+
 ;(navigator.xr as XRSystem)
     .isSessionSupported('immersive-vr')
     .then((isSupported) => {
@@ -209,11 +213,11 @@ function buildControllers() {
         _controller.userData.selectPressed = false
         _controller.userData.selectPressedPrev = false
         // add ray in it
-        scene.add(_controller)
+        user.add(_controller)
         controllers.push(_controller)
         const grip = renderer.xr.getControllerGrip(i)
         grip.add(controllerModelFactory.createControllerModel(grip))
-        scene.add(grip)
+        user.add(grip)
     }
     return controllers
 }
@@ -330,14 +334,20 @@ document.getElementById('gltfInput')?.addEventListener('change', (event) => {
     convertFile(file)
 })
 
+renderer.xr.addEventListener('sessionstart', start)
+
+function start() {
+    console.log('VR Mode entered')
+}
+
 function init() {
     scene = addLight(scene)
     scene.background = new THREE.Color(0xffffff)
     camera = addCamera()
-    let group = new THREE.Group()
-    group.add(camera)
-    group.position.set(0.5, 0.75, 0.5)
-    scene.add(group)
+    user.add(camera)
+    user.position.set(0.0, 0.0, 0.0)
+    user.rotation.copy(camera.rotation)
+    scene.add(user)
     createCharacter()
     // box.add(camera)
 
