@@ -725,7 +725,9 @@ function checkControllerAction(controller) {
                 controller.children[0].scale.z = intersects[0].distance
                 let selectedObject = intersects[0].object
                 ;((selectedObject as THREE.Mesh).material as any).color = new THREE.Color(0x00ff00)
-                console.log(selectedObject)
+                // save which object this controller picked
+                // highlight the object if we haven't already
+                // save its color
             }
             // ok so this is pressed for first time
         } else if (controller.userData.selectPressed) {
