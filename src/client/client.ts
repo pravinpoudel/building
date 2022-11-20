@@ -334,6 +334,10 @@ function init() {
     scene = addLight(scene)
     scene.background = new THREE.Color(0xffffff)
     camera = addCamera()
+    let group = new THREE.Group()
+    group.add(camera)
+    group.position.set(0.5, 0.75, 0.5)
+    scene.add(group)
     createCharacter()
     // box.add(camera)
 
@@ -368,7 +372,7 @@ function init() {
                         _child.geometry.computeBoundingBox() //AABB
                         _child.castShadow = true
                         _child.receiveShadow = true
-                        _child.scale.set(100, 100, 100)
+                        _child.scale.set(1, 1, 1)
                         sceneObjects.push(child)
                         // let verticesToRemove = Math.floor(
                         //     _child.geometry.attributes.position.count * 0.1
@@ -758,35 +762,26 @@ function animate(now: number) {
     if (oldGuyLoaded) {
         mixerOldGuy.update(delta)
     }
-    // console.log(cannonDebugRenderer)
 
     cannonDebugRenderer.update()
     TWEEN.update()
     KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
     if (character) {
         character.position.copy(camera.position)
-        // console.log(character.position)
     }
-    if (xrManager.isPresenting && firstTime) {
-        firstTime = false
-        const baseReferenceSpace = xrManager.getReferenceSpace(),
-            offsetPosition = camera!.position,
-            offsetRotation = camera!.rotation
-        console.log(baseReferenceSpace)
-        const transform = new XRRigidTransform(
-                { x: offsetPosition.x, y: offsetPosition.y, z: offsetPosition.z, w: 1 },
-                {
-                    x: offsetRotation.x,
-                    y: -1 * offsetRotation.y,
-                    z: offsetRotation.z,
-                    w: 1,
-                }
-            ),
-            //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
-            teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
 
-        xrManager.setReferenceSpace(teleportSpaceOffset)
-    }
+    // if (xrManager.isPresenting && firstTime) {
+    //     firstTime = false
+    //     const baseReferenceSpace = xrManager.getReferenceSpace(),
+    //         offsetPosition = camera!.position,
+    //         offsetRotation = camera!.rotation
+    //     console.log(baseReferenceSpace)
+    //     const transform = new XRRigidTransform(offsetPosition, offsetRotation),
+    //         //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
+    //         teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
+
+    //     xrManager.setReferenceSpace(teleportSpaceOffset)
+    // }
     updateControllerAction()
     render(delta)
 }
