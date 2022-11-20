@@ -2,9 +2,9 @@
 
 ### Progress:
 
-Astronaut 3D GLTF model rendered which need to be annotated: 
+VR Stereo scene when VR mode is entered<br />
 
-![Screenshot](screenshots/roman.png)
+![image](https://user-images.githubusercontent.com/11494733/202894761-0fba9553-ace0-459d-bfba-23462f34c5f2.png))
 
 ### Update
 ```diff
