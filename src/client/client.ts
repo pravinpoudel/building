@@ -1,5 +1,15 @@
 import * as THREE from 'three'
-import { BufferGeometry, Color, FloatType, Line, Scene, Vec2, Vector3 } from 'three'
+import {
+    BufferGeometry,
+    Color,
+    FloatType,
+    Line,
+    Matrix4,
+    Raycaster,
+    Scene,
+    Vec2,
+    Vector3,
+} from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -182,8 +192,14 @@ function buildControllers() {
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, -1),
     ])
-    const line = new Line(rayGeometry)
-    line.scale.z = 10
+    const line = new Line(
+        rayGeometry,
+        new THREE.LineBasicMaterial({
+            color: 0x333300,
+            linewidth: 5,
+        })
+    )
+    line.scale.z = 0
 
     for (let i = 0; i < 2; i++) {
         const _controller = renderer.xr.getController(i)
@@ -687,6 +703,37 @@ function physicsWorld() {
     world.addBody(planeBody)
 }
 
+function updateControllerAction() {
+    if (controllers.length > 0) {
+        controllers.forEach((controller, index) => {
+            checkControllerAction(controller)
+        })
+    }
+}
+
+function checkControllerAction(controller) {
+    if (controller.userData.selectPressed) {
+        //ok so the controller is pressed
+        if (!controller.userData.selectPressedPrev) {
+            const raycaster = new Raycaster()
+            const controllerRotation = new Matrix4()
+            controllerRotation.extractRotation(controller.matrixWorld)
+            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld)
+            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(controllerRotation)
+            const intersects = raycaster.intersectObjects(sceneObjects, false)
+            if (intersects.length > 0) {
+                controller.children[0].scale.z = intersects[0].distance
+                let selectedObject = intersects[0].object
+                ;((selectedObject as THREE.Mesh).material as any).color = new THREE.Color(0x00ff00)
+                console.log(selectedObject)
+            }
+            // ok so this is pressed for first time
+        } else if (controller.userData.selectPressed) {
+            // this is continue of pressing event
+        }
+    }
+}
+
 function animate(now: number) {
     // requestAnimationFrame(animate)
     let delta = clock.getDelta()
@@ -716,6 +763,7 @@ function animate(now: number) {
         character.position.copy(camera.position)
         // console.log(character.position)
     }
+    updateControllerAction()
     render(delta)
 }
 
