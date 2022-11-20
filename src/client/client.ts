@@ -9,6 +9,7 @@ import {
     Scene,
     Vec2,
     Vector3,
+    WebXRManager,
 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
@@ -735,7 +736,8 @@ function checkControllerAction(controller) {
         }
     }
 }
-
+const xrManager = renderer.xr
+let firstTime = true
 function animate(now: number) {
     // requestAnimationFrame(animate)
     let delta = clock.getDelta()
@@ -765,6 +767,26 @@ function animate(now: number) {
         character.position.copy(camera.position)
         // console.log(character.position)
     }
+    if (xrManager.isPresenting && firstTime) {
+        firstTime = false
+        const baseReferenceSpace = xrManager.getReferenceSpace(),
+            offsetPosition = camera!.position,
+            offsetRotation = camera!.rotation
+        console.log(baseReferenceSpace)
+        const transform = new XRRigidTransform(
+                { x: offsetPosition.x, y: offsetPosition.y, z: offsetPosition.z, w: 1 },
+                {
+                    x: offsetRotation.x,
+                    y: -1 * offsetRotation.y,
+                    z: offsetRotation.z,
+                    w: 1,
+                }
+            ),
+            //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
+            teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
+
+        xrManager.setReferenceSpace(teleportSpaceOffset)
+    }
     updateControllerAction()
     render(delta)
 }
@@ -784,17 +806,6 @@ let cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 init()
 
 initMapCamera()
-
-// const transform = new XRRigidTransform(offsetPosition, {
-//         x: offsetRotation.x,
-//         y: -offsetRotation.y,
-//         z: offsetRotation.z,
-//         w: offsetRotation.w,
-//     }),
-//     //const transform = new XRRigidTransform( offsetPosition, { x: offsetRotation.x, y: -(offsetRotation.y - 0.5) , z: offsetRotation.z, w: offsetRotation.w } ),
-//     teleportSpaceOffset = baseReferenceSpace!.getOffsetReferenceSpace(transform)
-
-// xrManager.setReferenceSpace(teleportSpaceOffset)
 
 postProcessing(renderer)
 intializeDemo_()
