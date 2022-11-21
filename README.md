@@ -4,7 +4,12 @@
 
 VR Stereo scene when VR mode is entered<br />
 
-![image](https://user-images.githubusercontent.com/11494733/202894761-0fba9553-ace0-459d-bfba-23462f34c5f2.png))
+![image](https://user-images.githubusercontent.com/11494733/202894761-0fba9553-ace0-459d-bfba-23462f34c5f2.png)
+
+Ray in direction where controller is pointing with target at the point of intersection with floor added;
+
+![image](https://user-images.githubusercontent.com/11494733/203047178-d165b6cd-35b9-4ed5-8c80-9e5386237008.png)
+
 
 ### Update
 ```diff
