@@ -42,7 +42,7 @@ import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
-import { createRay, removeRay, addLightRay, addSprite } from './navigationLine'
+import { createRay, removeRay } from './navigationLine'
 
 import {
     addLight,

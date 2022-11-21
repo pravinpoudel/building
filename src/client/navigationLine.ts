@@ -1,3 +1,4 @@
+import { timeStamp } from 'console'
 import { create } from 'domain'
 import {
     AdditiveBlending,
@@ -5,8 +6,14 @@ import {
     BufferGeometry,
     Line,
     LineBasicMaterial,
+    Mesh,
+    MeshBasicMaterial,
+    PlaneGeometry,
+    PointLight,
+    TextureLoader,
     Vector3,
 } from 'three'
+import { scene } from './client'
 import { addLight } from './utils'
 
 const lineSegments = 25
@@ -19,7 +26,20 @@ let lineMaterial = new LineBasicMaterial({
     blending: AdditiveBlending,
 })
 const guideLine = new Line(lineGeometry, lineMaterial)
+const guideFootTexture = new TextureLoader().load('./textures/target.png')
+const guideFootSprite = new Mesh(
+    new PlaneGeometry(0.3, 0.3, 1, 1),
+    new MeshBasicMaterial({
+        map: guideFootTexture,
+        blending: AdditiveBlending,
+        color: 0x888888,
+        transparent: true,
+    })
+)
 
+guideFootSprite.rotation.x = (-1 * Math.PI) / 2
+
+const footPointLight = new PointLight(0x00ff00, 1.0, 5)
 function getPosition(positionVec, t, p0, velocity, gravity) {
     positionVec.copy(p0)
     positionVec.addScaledVector(velocity, t) //remember it should be vector, float [order matters]
@@ -41,10 +61,14 @@ function createRay(controller) {
     controller.getWorldPosition(startingPositionWorld)
     controller.getWorldDirection(rayDirectionWorld)
     rayDirectionWorld = rayDirectionWorld.multiplyScalar(6)
+
     let totalTime = findTotalTime(startingPositionWorld.y, rayDirectionWorld, -9.8)
+    let localPosition = new Vector3()
+    scene.add(guideFootSprite)
+    scene.add(footPointLight)
+
     for (let i = 1; i <= lineSegments; i++) {
         let timeStamp = (i * totalTime) / lineSegments
-        let localPosition = new Vector3()
         localPosition = getPosition(
             localPosition,
             timeStamp,
@@ -59,16 +83,24 @@ function createRay(controller) {
     guideLine.geometry.attributes.position.needsUpdate = true
     console.log(guideLine)
     controller.add(guideLine)
-    addSprite()
-    addLightRay()
+    getPosition(
+        guideFootSprite.position,
+        totalTime * 0.89,
+        startingPositionWorld,
+        rayDirectionWorld,
+        -9.8
+    )
+    getPosition(
+        footPointLight.position,
+        totalTime * 0.8,
+        startingPositionWorld,
+        rayDirectionWorld,
+        -9.8
+    )
 }
-
-function addSprite() {}
-
-function addLightRay() {}
 
 function removeRay(controller) {
     controller.remove(guideLine)
 }
 
-export { createRay, removeRay, addLightRay, addSprite }
+export { createRay, removeRay }
