@@ -5,6 +5,7 @@ import {
     FloatType,
     Line,
     Matrix4,
+    Mesh,
     Raycaster,
     Scene,
     Vec2,
@@ -41,6 +42,7 @@ import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
+import { createRay, removeRay, addLightRay, addSprite } from './navigationLine'
 
 import {
     addLight,
@@ -56,7 +58,8 @@ import * as KeyBoardHandler from './KeyInputManager'
 import { convertFile } from './fileConverter'
 
 import './styles/style.css'
-import { group } from 'console'
+import { Console, group } from 'console'
+import { create } from 'domain'
 
 let scene = new THREE.Scene()
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -208,16 +211,27 @@ function buildControllers() {
 
     for (let i = 0; i < 2; i++) {
         const _controller = renderer.xr.getController(i)
-        _controller.add(line.clone())
+        // _controller.add(line.clone())
+        // const controllerExtraMesh = new Mesh(geometry, material)
+        // controllerExtraMesh.position.set(0, 0.2, 0)
+        // _controller.add(controllerExtraMesh)
         _controller.name = 'controller' + (i + 1)
         _controller.userData.selectPressed = false
         _controller.userData.selectPressedPrev = false
         // add ray in it
         user.add(_controller)
         controllers.push(_controller)
+
         const grip = renderer.xr.getControllerGrip(i)
         grip.add(controllerModelFactory.createControllerModel(grip))
         user.add(grip)
+        //-------------------------------------------
+        // grip.addEventListener('connected', (e: any) => {
+        //     let grip1 = e.target
+        //     grip1.add(controllerModelFactory.createControllerModel(grip1))
+        //     user.add(grip1)
+        //     console.log(user)
+        // })
     }
     return controllers
 }
@@ -233,16 +247,17 @@ initVR()
 
 function selectStartHandler(event) {
     const controller = event.target
-    console.log(controller)
-    controller.children[0].scale.z = 10
+    createRay(controller)
+    // controller.children[0].scale.z = 10
     controller.userData.selectPressed = true
 }
 
 function selectEndHandler(event) {
     const controller = event.target
 
-    controller.children[0].scale.z = 0
+    // controller.children[0].scale.z = 0
     controller.userData.selectPressed = false
+    removeRay(controller)
 }
 
 const fbxManager = new THREE.LoadingManager()
@@ -345,8 +360,8 @@ function init() {
     scene.background = new THREE.Color(0xffffff)
     camera = addCamera()
     user.add(camera)
-    user.position.set(0.0, 0.0, 0.0)
-    user.rotation.copy(camera.rotation)
+    user.position.set(0.0, 1.0, 0.0)
+    // user.rotation.copy(camera.rotation)
     scene.add(user)
     createCharacter()
     // box.add(camera)
@@ -721,7 +736,7 @@ function physicsWorld() {
 function updateControllerAction() {
     if (controllers.length > 0) {
         controllers.forEach((controller, index) => {
-            checkControllerAction(controller)
+            // checkControllerAction(controller)
         })
     }
 }
