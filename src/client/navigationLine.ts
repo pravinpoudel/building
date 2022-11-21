@@ -9,14 +9,13 @@ import {
 } from 'three'
 import { addLight } from './utils'
 
-const lineSegments = 15
+const lineSegments = 25
 const lineGeometry = new BufferGeometry()
 const lineGeometryVertices = new Float32Array((lineSegments + 1) * 3)
 lineGeometryVertices.fill(0)
 lineGeometry.setAttribute('position', new BufferAttribute(lineGeometryVertices, 3))
 let lineMaterial = new LineBasicMaterial({
     color: 0x555555,
-    linewidth: 5,
     blending: AdditiveBlending,
 })
 const guideLine = new Line(lineGeometry, lineMaterial)
@@ -43,7 +42,7 @@ function createRay(controller) {
     controller.getWorldDirection(rayDirectionWorld)
     rayDirectionWorld = rayDirectionWorld.multiplyScalar(6)
     let totalTime = findTotalTime(startingPositionWorld.y, rayDirectionWorld, -9.8)
-    for (let i = 1; i < 11; i++) {
+    for (let i = 1; i <= lineSegments; i++) {
         let timeStamp = (i * totalTime) / lineSegments
         let localPosition = new Vector3()
         localPosition = getPosition(
