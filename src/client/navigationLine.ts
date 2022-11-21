@@ -101,6 +101,8 @@ function createRay(controller) {
 
 function removeRay(controller) {
     controller.remove(guideLine)
+    scene.remove(guideFootSprite)
+    scene.remove(footPointLight)
 }
 
 export { createRay, removeRay }
