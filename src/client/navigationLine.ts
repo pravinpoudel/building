@@ -10,11 +10,12 @@ import {
     MeshBasicMaterial,
     PlaneGeometry,
     PointLight,
+    Raycaster,
     TextureLoader,
     Vector3,
 } from 'three'
-import { scene } from './client'
-import { addLight } from './utils'
+import { scene, sceneObjects } from './client'
+import { world } from './utils'
 
 const lineSegments = 25
 const lineGeometry = new BufferGeometry()
@@ -25,6 +26,7 @@ let lineMaterial = new LineBasicMaterial({
     color: 0x555555,
     blending: AdditiveBlending,
 })
+
 const guideLine = new Line(lineGeometry, lineMaterial)
 const guideFootTexture = new TextureLoader().load('./textures/target.png')
 const guideFootSprite = new Mesh(
@@ -55,6 +57,7 @@ function findTotalTime(p0y, velocity, gravity) {
 
 function createRay(controller, scene) {
     //  this is in ray-target space so first point is origin itself
+    let raycaster = new Raycaster()
     let startVertex = new Vector3(0, 0, 0)
     let startingPositionWorld = new Vector3()
     let rayDirectionWorld = new Vector3()
@@ -66,7 +69,7 @@ function createRay(controller, scene) {
     let localPosition = new Vector3()
     scene.add(guideFootSprite)
     scene.add(footPointLight)
-
+    let prevPosition = startingPositionWorld
     for (let i = 1; i <= lineSegments; i++) {
         let timeStamp = (i * totalTime) / lineSegments
         localPosition = getPosition(
@@ -76,12 +79,28 @@ function createRay(controller, scene) {
             rayDirectionWorld,
             -9.8
         )
+        let direction = new Vector3(
+            localPosition.x - prevPosition.x,
+            localPosition.y - prevPosition.y,
+            localPosition.z - prevPosition.z
+        )
+        raycaster.ray.origin.set(prevPosition.x, prevPosition.y, prevPosition.z)
+        raycaster.ray.direction.set(direction.x, direction.y, direction.z)
+        const intersections = raycaster.intersectObjects(sceneObjects, false)
+        let intersection = intersections.length > 0 ? intersections[0] : null
+        if (intersection !== null) {
+            console.log('selected something')
+            if (intersection.object.userData.index >= 0) {
+                console.log('physics body hit')
+            }
+        }
+        prevPosition = new Vector3(localPosition.x, localPosition.y, localPosition.z)
+
         // remember that this localposition is in world cordinate system so need to convert to world
         controller.worldToLocal(localPosition)
         localPosition.toArray(lineGeometryVertices, i * 3)
     }
     guideLine.geometry.attributes.position.needsUpdate = true
-    console.log(guideLine)
     controller.add(guideLine)
     getPosition(
         guideFootSprite.position,

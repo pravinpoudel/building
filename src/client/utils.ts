@@ -516,4 +516,5 @@ export {
     createPhysicsBody,
     dragPhysicsObject,
     initDragController,
+    world,
 }
