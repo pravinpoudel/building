@@ -122,7 +122,7 @@ const modifier = new SimplifyModifier()
 
 // VR
 let controllers: Array<any> = []
-
+let raySelectedMesh: any
 let playerSpeed = 5
 
 let keys: any = {}
@@ -219,12 +219,12 @@ function buildControllers() {
         _controller.userData.selectPressed = false
         _controller.userData.selectPressedPrev = false
         // add ray in it
-        user.add(_controller)
+        scene.add(_controller)
         controllers.push(_controller)
 
         const grip = renderer.xr.getControllerGrip(i)
         grip.add(controllerModelFactory.createControllerModel(grip))
-        user.add(grip)
+        scene.add(grip)
         //-------------------------------------------
         // grip.addEventListener('connected', (e: any) => {
         //     let grip1 = e.target
@@ -247,7 +247,7 @@ initVR()
 
 function selectStartHandler(event) {
     const controller = event.target
-    createRay(controller)
+    createRay(controller, scene)
     // controller.children[0].scale.z = 10
     controller.userData.selectPressed = true
 }
@@ -257,7 +257,7 @@ function selectEndHandler(event) {
 
     // controller.children[0].scale.z = 0
     controller.userData.selectPressed = false
-    removeRay(controller)
+    removeRay(controller, scene)
 }
 
 const fbxManager = new THREE.LoadingManager()
@@ -756,15 +756,33 @@ function checkControllerAction(controller) {
                 let selectedObject = intersects[0].object
                 ;((selectedObject as THREE.Mesh).material as any).color = new THREE.Color(0x00ff00)
                 // save which object this controller picked
+                raySelectedMesh = selectedObject
                 // highlight the object if we haven't already
                 // save its color
             }
-            // ok so this is pressed for first time
-        } else if (controller.userData.selectPressed) {
+            // ok so this is not pressed for first time
+        } else if (raySelectedMesh) {
+            console.log('you are continuing pressing and you have selected a mesh already')
             // this is continue of pressing event
+        } else {
+            console.log('you are contung pressing button but have not selected anything')
+        }
+    } else {
+        // it mean nothing is pressed so check if it was just pressed before this loop
+        // and if yes change the color of thing that is selected or anything you did
+        // -------------------------------------------------------------------------
+        // one thing you need to do is after releasing button when you are done undoing anything
+        // empty raySelectedMesh variable
+        // but remember if there was nothing selected in last pressed you need to check if
+        // it was released without selecting
+        if (raySelectedMesh != undefined) {
+            raySelectedMesh = undefined
         }
     }
+    // now change now to previous for another loop
+    controller.userData.selectPressedPrev = controller.userData.selectPressed
 }
+
 const xrManager = renderer.xr
 let firstTime = true
 function animate(now: number) {

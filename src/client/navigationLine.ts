@@ -53,7 +53,7 @@ function findTotalTime(p0y, velocity, gravity) {
     return solution
 }
 
-function createRay(controller) {
+function createRay(controller, scene) {
     //  this is in ray-target space so first point is origin itself
     let startVertex = new Vector3(0, 0, 0)
     let startingPositionWorld = new Vector3()
@@ -85,21 +85,25 @@ function createRay(controller) {
     controller.add(guideLine)
     getPosition(
         guideFootSprite.position,
-        totalTime * 0.89,
+        totalTime * 0.82,
         startingPositionWorld,
         rayDirectionWorld,
         -9.8
     )
     getPosition(
         footPointLight.position,
-        totalTime * 0.8,
+        totalTime * 0.82,
         startingPositionWorld,
         rayDirectionWorld,
         -9.8
     )
 }
 
-function removeRay(controller) {
+function removeRay(controller, scene) {
+    controller.userData.selectPressed = false
+    // if(intersection){
+
+    // }
     controller.remove(guideLine)
     scene.remove(guideFootSprite)
     scene.remove(footPointLight)
