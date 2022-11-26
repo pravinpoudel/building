@@ -39,6 +39,7 @@ let transformControl
 let canTransform = false
 let isSphere = false
 let isBox = true
+let isKeyLocked = false
 
 function addLight(scene: THREE.Scene) {
     const dirLight_right_near = new THREE.DirectionalLight(new THREE.Color(0xffff))
@@ -358,6 +359,10 @@ function onKeyDown(event) {
         transformControl.showZ = !transformControl.showZ
     } else if (code == 27) {
         transformControl.reset()
+    } else if (code == 70) {
+        ;(document.getElementsByClassName('physics-info')[0] as HTMLElement).style.display = 'block'
+        // controls.disconnect()
+        isKeyLocked = true
     }
 }
 
@@ -488,6 +493,19 @@ function onWindowResize() {
     // render()
 }
 
+function descriptionDoneHandler(event) {
+    event.stopPropagation()
+    ;(document.getElementsByClassName('physics-info')[0] as HTMLElement).style.display = 'none'
+    controls.connect()
+    // controls.lock()
+    isKeyLocked = false
+}
+
+;(document.getElementById('description-done') as HTMLElement).addEventListener(
+    'click',
+    descriptionDoneHandler
+)
+
 var slider = document.getElementById('myRange') as HTMLInputElement
 var output = document.getElementById('scaleDisplay') as HTMLSpanElement
 console.log(slider.value)
@@ -520,4 +538,5 @@ export {
     createPhysicsBody,
     dragPhysicsObject,
     initDragController,
+    isKeyLocked,
 }

@@ -38,6 +38,7 @@ import {
     onWindowResize,
     createPhysicsBody,
     initDragController,
+    isKeyLocked,
 } from './utils'
 
 import { annotation } from './house_annotation'
@@ -290,30 +291,35 @@ function init() {
     async function load_model() {
         const gltfLoader = new GLTFLoader()
         gltfLoader.setDRACOLoader(dracoLoader)
-        await gltfLoader.setPath('./models/DNA/').load('DNA-02.glb', function (gltf) {
-            gltf.scene.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    const _child = child as THREE.Mesh
-                    let geometry = _child.geometry
-                    console.log(_child.material)
-                    let mesh = new THREE.Mesh(geometry, _material)
-                    mesh.scale.multiplyScalar(100)
-                    scene.add(mesh)
-                    sceneObjects.push(child)
-                }
-                if (child instanceof THREE.Light) {
-                    const _light = child as THREE.Light
-                    _light.castShadow = true
-                    _light.shadow.bias = 0.0008 // to reduce artifact in shadow
-                    _light.shadow.mapSize.width = 1024
-                    _light.shadow.mapSize.height = 1024
-                }
+        await gltfLoader
+            .setPath('./models/drawing_room/')
+            .load('scene-merged-draco.glb', function (gltf) {
+                gltf.scene.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        const _child = child as THREE.Mesh
+                        // let geometry = _child.geometry
+                        // console.log(_child.material)
+                        // let mesh = new THREE.Mesh(geometry, _material)
+                        _child.geometry.computeBoundingBox()
+                        _child.castShadow = true
+                        _child.scale.multiplyScalar(100)
+                        sceneObjects.push(child)
+                    }
+                    if (child instanceof THREE.Light) {
+                        const _light = child as THREE.Light
+                        _light.castShadow = true
+                        _light.shadow.bias = 0.0008 // to reduce artifact in shadow
+                        _light.shadow.mapSize.width = 1024
+                        _light.shadow.mapSize.height = 1024
+                    }
+                })
+                scene.add(gltf.scene)
+                ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
+                ;(mainscreen as HTMLElement).style.display = 'block'
+                document
+                    .getElementById('drop_test_btn')
+                    ?.addEventListener('click', drop_test_handler)
             })
-            console.log(scene)
-            ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
-            ;(mainscreen as HTMLElement).style.display = 'block'
-            document.getElementById('drop_test_btn')?.addEventListener('click', drop_test_handler)
-        })
     }
 
     function drop_test_handler() {
@@ -661,7 +667,9 @@ function animate(now: number) {
 
     cannonDebugRenderer.update()
     TWEEN.update()
-    KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
+    if (!isKeyLocked) {
+        KeyBoardHandler.keyUpdate(handlers, keys, delta * 1000)
+    }
     if (character) {
         character.position.copy(camera.position)
         // console.log(character.position)
@@ -707,4 +715,5 @@ export {
     clock,
     scene,
     orbitControls,
+    isKeyLocked,
 }

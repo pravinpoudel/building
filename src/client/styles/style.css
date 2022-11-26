@@ -7,6 +7,7 @@ body {
     overflow: hidden;
     margin: 0px;
     font-family: 'Roboto', sans-serif;
+    user-select: none;
 }
 
 #menu-panel {
@@ -24,6 +25,37 @@ ul {
 
 li {
     margin: 10px;
+}
+
+.physics-info {
+    height: 50vh;
+    width: 500px;
+    position: absolute;
+    right: 25%;
+    top: 25%;
+    background-color: #f4f4ff;
+    align-items: center;
+    box-shadow: 3px 5px 8px #ccc;
+    display: none;
+}
+
+.physics-info form {
+    display: flex;
+    /* align-content: space-around; */
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+}
+
+.physics-info form input {
+    margin: 15px 0px;
+    width: 85%;
+}
+
+.physics-info form input {
+    padding: 12px;
 }
 
 button {
