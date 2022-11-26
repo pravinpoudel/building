@@ -234,3 +234,32 @@ button:hover {
 #drop_test button {
     padding: 10px;
 }
+
+#stateDownload {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 16px;
+    background-color: #fb9b02;
+    padding: 15px 30px;
+}
+
+#stateInputLabel {
+    padding: 15px 15px;
+    width: 100px;
+    background-color: #d04905;
+    color: white;
+    text-transform: uppercase;
+    margin-left: 10px;
+    /* font-weight: bold; */
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#physicsInput {
+    display: none;
+}
+
+#state-upload-div {
+    margin: 50px 0px;
+}

@@ -67,6 +67,14 @@
                             <li>WASD to go Forward, Left, Back, Right</li>
                         </ul>
                     </div>
+                    <div id="state-upload-div">
+                        <label>Load stored physics file ( if any)</label>
+                        <label id="stateInputLabel">
+                            Select File
+                            <input type="file" name="storedPhysics" id="physicsInput" />
+                        </label>
+                    </div>
+                    <br />
                     <button id="start-button">Start</button>
                 </div>
             </div>
@@ -84,6 +92,7 @@
         <div class="container">
             <div id="menu-panel"></div>
         </div>
+        <button id="stateDownload">Done</button>
 
         <script type="module" src="bundle.js"></script>
     </body>

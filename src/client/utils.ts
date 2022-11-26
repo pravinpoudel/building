@@ -18,6 +18,8 @@ import {
     orbitControls,
 } from './client'
 
+import { updatePhysicsElement, addPhysicsElement } from './storePhysics'
+
 import * as CANNON from 'cannon-es'
 import { ConvexPolyhedron, Cylinder, Heightfield, Material, Plane, Sphere } from 'cannon-es'
 import * as TWEEN from '@tweenjs/tween.js'
@@ -309,6 +311,12 @@ function createPhysicsBody(e: MouseEvent) {
             let itemsBodycopy = Object.assign(itemsBody, { name: 'chair' })
             console.log(itemsBodycopy)
             itemsBodycopy.position.copy(new CANNON.Vec3(point.x, point.y, point.z))
+            let params1 = {
+                radius: myShape == 'SPHERE' ? 10 : null,
+                halfExtends: myShape == 'BOX' ? new CANNON.Vec3(5, 5, 5) : null,
+            }
+            console.log('point position is', point)
+            addPhysicsElement(myShape, params1, point, 0)
             world.addBody(itemsBodycopy)
         }
     }
@@ -377,6 +385,14 @@ function onKeyUp(event) {
             let mesh1 = selectedMesh
             mesh1.material.wireframe = true
             mesh1.material.color = new THREE.Color(0x22ff22)
+            let elementIndex = selectedMesh.userData.index
+            let params1 = {
+                radius: myShape == 'SPHERE' ? world.bodies[elementIndex].shapes[0].radius : null,
+                halfExtends:
+                    myShape == 'BOX' ? world.bodies[elementIndex].shapes[0].halfExtents : null,
+            }
+            console.log(selectedMesh.position)
+            updatePhysicsElement(elementIndex, myShape, params1, selectedMesh.position)
             selectedMesh = undefined
             transformControl.detach()
         }
