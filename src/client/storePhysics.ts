@@ -1,4 +1,5 @@
 import * as CANNON from 'cannon-es'
+import { world } from './client'
 
 interface physicsStateType {
     shape: string
@@ -65,6 +66,45 @@ function download() {
     element.click()
 }
 
+let stateHash = {
+    SPHERE: (radius) => {
+        return new CANNON.Sphere(radius)
+    },
+    BOX: (x, y, z) => {
+        return new CANNON.Box(new CANNON.Vec3(x, y, z))
+    },
+}
+
+function readPhysicsState(result: Array<any>) {
+    for (let i = 0, _length = result.length; i < _length; i++) {
+        let shape = stateHash[result[i].shape](
+            result[i].halfExtends.x,
+            result[i].halfExtends.y,
+            result[i].halfExtends.z
+        )
+        let itemsBody = new CANNON.Body({
+            mass: 0,
+            shape: shape,
+        })
+        itemsBody.position.copy(
+            new CANNON.Vec3(result[i].position.x, result[i].position.y, result[i].position.z)
+        )
+        world.addBody(itemsBody)
+    }
+}
+
 document.getElementById('stateDownload')?.addEventListener('click', download)
+let inputElement: HTMLInputElement = document.getElementById('physicsInput') as HTMLInputElement
+inputElement.oninput = () => {
+    if (inputElement.files![0]) {
+        let stateFile = inputElement.files![0]
+        let reader = new FileReader()
+        reader.onload = async function (event) {
+            let result = JSON.parse(event.target?.result as string)
+            await readPhysicsState(result)
+        }
+        reader.readAsText(stateFile)
+    }
+}
 
 export { updatePhysicsElement, addPhysicsElement }
