@@ -673,7 +673,7 @@ function animate(now: number) {
         orbitControls.update()
     }
     if (oldGuyLoaded) {
-        mixerOldGuy.update(delta)
+        mixerOldGuy.update(delta * 0.1)
     }
     // console.log(cannonDebugRenderer)
 
