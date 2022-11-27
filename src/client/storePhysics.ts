@@ -1,4 +1,6 @@
 import * as CANNON from 'cannon-es'
+import { text } from 'stream/consumers'
+import { FileLoader } from 'three'
 import { world } from './client'
 
 interface physicsStateType {
@@ -9,7 +11,7 @@ interface physicsStateType {
     mass: number
 }
 
-const worldState: Array<physicsStateType> = []
+let worldState: Array<physicsStateType> = []
 
 function addPhysicsElement(shape, params, position, mass) {
     worldState.push({
@@ -55,15 +57,41 @@ function movePhysicsElement(index, position) {
     myBody.position.z = position.z
 }
 
-function download() {
+async function getDownloadHandle() {
+    const downloadOption = {
+        suggestedName: 'physicsState.json',
+        types: [
+            {
+                description: 'Physics state json file',
+                accept: {
+                    'application/json': ['.json'],
+                },
+            },
+        ],
+    }
+    // console.log(window)
+    const handle = await (window as Window)['showSaveFilePicker'](downloadOption)
+    console.log(handle)
+    return handle
+}
+
+async function saveCustomLocation(handle, data) {
+    const writable = await handle.createWritable()
+    await writable.write(data)
+    await writable.close()
+}
+
+async function download() {
     const _data = JSON.stringify(worldState)
-    let filename = 'physicsState.json'
-    var element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(_data))
-    element.setAttribute('download', filename)
-    element.style.display = 'none'
-    document.body.appendChild(element)
-    element.click()
+    const handle = await getDownloadHandle()
+    saveCustomLocation(handle, _data)
+    // let filename = 'physicsState.json'
+    // var element = document.createElement('a')
+    // element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(_data))
+    // element.setAttribute('download', filename)
+    // element.style.display = 'none'
+    // document.body.appendChild(element)
+    // element.click()
 }
 
 let stateHash = {
@@ -75,7 +103,9 @@ let stateHash = {
     },
 }
 
-function readPhysicsState(result: Array<any>) {
+function readPhysicsState(data: string) {
+    let result = JSON.parse(data as string)
+    worldState = result
     for (let i = 0, _length = result.length; i < _length; i++) {
         let shape = stateHash[result[i].shape](
             result[i].halfExtends.x,
@@ -100,11 +130,11 @@ inputElement.oninput = () => {
         let stateFile = inputElement.files![0]
         let reader = new FileReader()
         reader.onload = async function (event) {
-            let result = JSON.parse(event.target?.result as string)
-            await readPhysicsState(result)
+            // let result = JSON.parse(event.target?.result as string)
+            await readPhysicsState(event.target?.result as string)
         }
         reader.readAsText(stateFile)
     }
 }
 
-export { updatePhysicsElement, addPhysicsElement }
+export { updatePhysicsElement, addPhysicsElement, readPhysicsState, worldState }

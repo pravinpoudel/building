@@ -30,6 +30,7 @@ import CannonUtils from './canonUitls'
 import CannonDebugRenderer from './canonDebugRenderer'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import * as TWEEN from '@tweenjs/tween.js'
+import { readPhysicsState, worldState } from './storePhysics'
 
 import {
     addLight,
@@ -174,6 +175,7 @@ const fbxManager = new THREE.LoadingManager()
 const fbxLoader = new FBXLoader(fbxManager)
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('draco/')
+const loader = new THREE.FileLoader()
 
 fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
     // object->animations-> Array(1)->animationclip
@@ -314,11 +316,21 @@ function init() {
                     }
                 })
                 scene.add(gltf.scene)
-                ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
-                ;(mainscreen as HTMLElement).style.display = 'block'
-                document
-                    .getElementById('drop_test_btn')
-                    ?.addEventListener('click', drop_test_handler)
+                loader.load(
+                    './stateFiles/physicsState.json',
+                    async function (data) {
+                        await readPhysicsState(data as string)
+                        ;(document.getElementById('loader') as HTMLDivElement).style.display =
+                            'none'
+                        ;(mainscreen as HTMLElement).style.display = 'block'
+                        document
+                            .getElementById('drop_test_btn')
+                            ?.addEventListener('click', drop_test_handler)
+                    }
+                    // function (err) {
+                    //     console.error('An error happened on loading physics state file', err)
+                    // }
+                )
             })
     }
 
