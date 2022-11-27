@@ -23,7 +23,7 @@ this will be added to the pipeline when there will be functionality to upload yo
 
 ## Video demo:
 
-[![Watch the video](https://img.youtube.com/vi/44MaoyOK18k/default.jpg)](https://www.youtube.com/watch?v=44MaoyOK18k&ab_channel=PravinPoudel)
+[![Watch the video](https://img.youtube.com/vi/IyZVB7suBak/default.jpg)](https://www.youtube.com/watch?v=IyZVB7suBak&ab_channel=PravinPoudel)
 
 
 ## Things to avoid or take care:
