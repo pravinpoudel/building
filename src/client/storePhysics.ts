@@ -95,23 +95,22 @@ async function download() {
 }
 
 let stateHash = {
-    SPHERE: (radius) => {
+    SPHERE: (halfExtends, radius) => {
         return new CANNON.Sphere(radius)
     },
-    BOX: (x, y, z) => {
-        return new CANNON.Box(new CANNON.Vec3(x, y, z))
+    BOX: (halfExtends, radius) => {
+        return new CANNON.Box(new CANNON.Vec3(halfExtends.x, halfExtends.y, halfExtends.z))
     },
 }
 
 function readPhysicsState(data: string) {
     let result = JSON.parse(data as string)
     worldState = result
+    let _halfExtends, _radius
     for (let i = 0, _length = result.length; i < _length; i++) {
-        let shape = stateHash[result[i].shape](
-            result[i].halfExtends.x,
-            result[i].halfExtends.y,
-            result[i].halfExtends.z
-        )
+        _halfExtends = result[i].halfExtends
+        _radius = result[i].radius
+        let shape = stateHash[result[i].shape](_halfExtends, _radius)
         let itemsBody = new CANNON.Body({
             mass: 0,
             shape: shape,
