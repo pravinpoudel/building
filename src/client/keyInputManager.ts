@@ -15,6 +15,7 @@ function startHandlerFPS(controls, startElement, menuBoard, speedInputElement) {
     // })
     controls.lock()
     let playerSpeed = Number(speedInputElement.value)
+    console.log('player speed is ', playerSpeed)
     return playerSpeed
 }
 
@@ -65,7 +66,8 @@ function registerKey(controls, handlers, keys, playerSpeed) {
             console.log('moveForward')
             let cameraWorldPositionX = controls.getObject().position.x
             // if (cameraWorldPositionX > (-1 * terrainDimension.x) / 2.0)
-            controls.moveForward(playerSpeed * elapsedTime * 0.01)
+            console.log(elapsedTime)
+            controls.moveForward(playerSpeed * elapsedTime * 0.001)
         },
         function () {}
     )
@@ -76,7 +78,7 @@ function registerKey(controls, handlers, keys, playerSpeed) {
         function (elapsedTime) {
             let cameraWorldPositionX = controls.getObject().position.x
             console.log('moveReverse')
-            controls.moveForward(-1 * playerSpeed * elapsedTime * 0.01)
+            controls.moveForward(-1 * playerSpeed * elapsedTime * 0.001)
         },
         () => {}
     )
@@ -87,7 +89,7 @@ function registerKey(controls, handlers, keys, playerSpeed) {
         function (elapsedTime) {
             let cameraWorldPositionZ = controls.getObject().position.Z
             console.log('moveLeft')
-            controls.moveRight(-1 * playerSpeed * elapsedTime * 0.01)
+            controls.moveRight(-1 * playerSpeed * elapsedTime * 0.001)
         },
 
         function (elapsedTime) {}
@@ -99,7 +101,7 @@ function registerKey(controls, handlers, keys, playerSpeed) {
         function (elapsedTime) {
             let cameraWorldPositionZ = controls.getObject().position.Z
             console.log('moveRight')
-            controls.moveRight(playerSpeed * elapsedTime * 0.01)
+            controls.moveRight(playerSpeed * elapsedTime * 0.001)
         },
         function (elapsedTime) {}
     )
@@ -131,7 +133,7 @@ function registerKey(controls, handlers, keys, playerSpeed) {
             console.log('moving up')
             let cameraWorldPositionY = controls.getObject().position.y
             // if (cameraWorldPositionY < 500) {
-            controls.getObject().position.y += playerSpeed * elapsedTime * 0.01
+            controls.getObject().position.y += playerSpeed * elapsedTime * 0.001
             // }
         },
         function (elapsedTime) {}
@@ -145,7 +147,7 @@ function registerKey(controls, handlers, keys, playerSpeed) {
             let cameraWorldPositionY = controls.getObject().position.y
             console.log(cameraWorldPositionY)
             // if (cameraWorldPositionY > 50.0) {
-            controls.getObject().position.y -= playerSpeed * elapsedTime * 0.01
+            controls.getObject().position.y -= playerSpeed * elapsedTime * 0.001
             // }
         },
         function (elapsedTime) {}

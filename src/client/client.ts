@@ -85,6 +85,21 @@ let parameters: any = {
     type: FloatType,
 }
 
+const rooms = {
+    livingRoom: {
+        size: {
+            x: 0,
+            y: 0,
+            z: 0,
+        },
+        center: {
+            x: 0,
+            y: 0,
+            z: 0,
+        },
+    },
+}
+
 let renderTarget = new THREE.WebGLRenderTarget(256, 256, parameters)
 //  it is saying this should match rendertargeta nd composerMap
 
@@ -123,7 +138,7 @@ const modifier = new SimplifyModifier()
 // VR
 let controllers: Array<any> = []
 let raySelectedMesh: any
-let playerSpeed = 5
+let playerSpeed = 0.2
 
 let keys: any = {}
 let deletedKeys: any = {}
@@ -260,25 +275,7 @@ function selectEndHandler(event) {
     removeRay(controller, scene)
 }
 
-const fbxManager = new THREE.LoadingManager()
-const fbxLoader = new FBXLoader(fbxManager)
-const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('draco/')
-
-fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
-    // object->animations-> Array(1)->animationclip
-    mixerOldGuy = new THREE.AnimationMixer(object)
-    console.log(object)
-    const action = mixerOldGuy.clipAction(object.animations[0])
-    ActionLists.push(action)
-    currentActiveAction = ActionLists[0]
-    object.traverse(function (child) {
-        if ((child as THREE.Mesh).isMesh) {
-            child.castShadow = true
-            child.receiveShadow = true
-            child.matrixAutoUpdate = false
-        }
-    })
+function normalizeSize(object, scale, needReposition, roomName: string | undefined = undefined) {
     let center = new THREE.Vector3()
     let size = new THREE.Vector3()
 
@@ -288,49 +285,34 @@ fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
     box.getSize(size)
 
     let maxSideDimension = Math.max(size.x, size.y, size.z)
-    // normalize the men to unit size
-    object.scale.multiplyScalar(1.0 / maxSideDimension)
-    object.position.y += center.y
-    object.position.x = -500
-    object.quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 1.5, 0))
-    box.setFromObject(object)
-    box.getCenter(center)
-    box.getSize(size)
-    object.position.y -= center.y / 2
-    object.scale.multiplyScalar(150)
+    object.scale.multiplyScalar((1.0 * scale) / maxSideDimension)
 
-    scene.add(object)
+    if (needReposition) {
+        console.log(object.position, size)
+        object.position.set(
+            rooms['livingRoom'].center.x - rooms['livingRoom'].size.x * 0.25,
+            rooms['livingRoom'].center.y,
+            rooms['livingRoom'].center.z
+        )
+        object.position.y += ((1.0 * scale) / maxSideDimension) * center.y
+    }
 
-    console.log(object.position.x)
-    // once a scene is loaded load those animation file in chain
+    if (roomName) {
+        ;(rooms[roomName] as any).size.x = ((size.x * scale) / maxSideDimension) as number
+        ;(rooms[roomName] as any).size.y = (size.y * scale) / maxSideDimension
+        ;(rooms[roomName] as any).size.z = (size.z * scale) / maxSideDimension
+        ;(rooms[roomName] as any).center.x = 0
+        ;(rooms[roomName] as any).center.y = 0.0
+        ;(rooms[roomName] as any).center.z = 0
+    }
 
-    fbxLoader.load('RumbaDancing.fbx', (object) => {
-        const actionDance = mixerOldGuy.clipAction(object.animations[0])
-        ActionLists.push(actionDance)
-        let pos0 = ActionLists.length - 1
-        animationListObject['dance'] = () => setActiveAction(ActionLists[1])
-        fbxLoader.load('MoveOrder.fbx', (object) => {
-            const actionMoveOrder = mixerOldGuy.clipAction(object.animations[0])
-            ActionLists.push(actionMoveOrder)
-            let pos1 = ActionLists.length - 1
-            animationListObject['moveOrder'] = () => setActiveAction(ActionLists[2])
-            fbxLoader.load('Salute.fbx', (object) => {
-                const actionSalute = mixerOldGuy.clipAction(object.animations[0])
-                ActionLists.push(actionSalute)
-                let pos2 = ActionLists.length - 1
-                animationListObject['salute'] = () => setActiveAction(ActionLists[3])
-                fbxLoader.load('Walk.fbx', (object) => {
-                    const actionWalk = mixerOldGuy.clipAction(object.animations[0])
-                    ActionLists.push(actionWalk)
-                    let pos3 = ActionLists.length - 1
-                    animationListObject['walk'] = () => setActiveAction(ActionLists[4])
-                    animationListObject['dance']()
-                    oldGuyLoaded = true
-                })
-            })
-        })
-    })
-})
+    return object
+}
+
+const fbxManager = new THREE.LoadingManager()
+const fbxLoader = new FBXLoader(fbxManager)
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('draco/')
 
 function initMapCamera() {
     mapCamera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000)
@@ -355,12 +337,14 @@ function start() {
     console.log('VR Mode entered')
 }
 
-function init() {
+async function init() {
     scene = addLight(scene)
+    const axesHelper = new THREE.AxesHelper(0.5)
+    scene.add(axesHelper)
     scene.background = new THREE.Color(0xffffff)
     camera = addCamera()
     user.add(camera)
-    user.position.set(0.0, 1.0, 0.0)
+    user.position.set(0, 0.5, 0)
     // user.rotation.copy(camera.rotation)
     scene.add(user)
     createCharacter()
@@ -397,7 +381,6 @@ function init() {
                         _child.geometry.computeBoundingBox() //AABB
                         _child.castShadow = true
                         _child.receiveShadow = true
-                        _child.scale.set(1, 1, 1)
                         sceneObjects.push(child)
                         // let verticesToRemove = Math.floor(
                         //     _child.geometry.attributes.position.count * 0.1
@@ -413,7 +396,62 @@ function init() {
                     }
                 })
                 gltf.scene.translateY
+                let object: any = gltf.scene
+                object = normalizeSize(object, 3, false, 'livingRoom')
+
                 scene.add(gltf.scene)
+
+                fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
+                    // object->animations-> Array(1)->animationclip
+                    mixerOldGuy = new THREE.AnimationMixer(object)
+                    const action = mixerOldGuy.clipAction(object.animations[0])
+                    ActionLists.push(action)
+                    currentActiveAction = ActionLists[0]
+                    object.traverse(function (child) {
+                        if ((child as THREE.Mesh).isMesh) {
+                            child.castShadow = true
+                            child.receiveShadow = true
+                            child.matrixAutoUpdate = false
+                        }
+                    })
+
+                    object = normalizeSize(object, 0.25, true)
+
+                    // object.position.x = -500
+                    object.quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 1.5, 0))
+                    scene.add(object)
+
+                    // once a scene is loaded load those animation file in chain
+
+                    fbxLoader.load('RumbaDancing.fbx', (object) => {
+                        const actionDance = mixerOldGuy.clipAction(object.animations[0])
+                        ActionLists.push(actionDance)
+                        let pos0 = ActionLists.length - 1
+                        animationListObject['dance'] = () => setActiveAction(ActionLists[1])
+                        fbxLoader.load('MoveOrder.fbx', (object) => {
+                            const actionMoveOrder = mixerOldGuy.clipAction(object.animations[0])
+                            ActionLists.push(actionMoveOrder)
+                            let pos1 = ActionLists.length - 1
+                            animationListObject['moveOrder'] = () => setActiveAction(ActionLists[2])
+                            fbxLoader.load('Salute.fbx', (object) => {
+                                const actionSalute = mixerOldGuy.clipAction(object.animations[0])
+                                ActionLists.push(actionSalute)
+                                let pos2 = ActionLists.length - 1
+                                animationListObject['salute'] = () =>
+                                    setActiveAction(ActionLists[3])
+                                fbxLoader.load('Walk.fbx', (object) => {
+                                    const actionWalk = mixerOldGuy.clipAction(object.animations[0])
+                                    ActionLists.push(actionWalk)
+                                    let pos3 = ActionLists.length - 1
+                                    animationListObject['walk'] = () =>
+                                        setActiveAction(ActionLists[4])
+                                    animationListObject['dance']()
+                                    oldGuyLoaded = true
+                                })
+                            })
+                        })
+                    })
+                })
                 ;(document.getElementById('loader') as HTMLDivElement).style.display = 'none'
                 ;(mainscreen as HTMLElement).style.display = 'block'
                 document
@@ -421,6 +459,10 @@ function init() {
                     ?.addEventListener('click', drop_test_handler)
             })
     }
+
+    await load_model()
+
+    console.log(rooms.livingRoom)
 
     function drop_test_handler() {
         let geometry = new THREE.SphereGeometry(5, 232, 32)
@@ -443,8 +485,6 @@ function init() {
         ballBodies.push(ballBody)
         ballAdded = true
     }
-
-    load_model()
 
     window.addEventListener('resize', onWindowResize)
 }
@@ -550,7 +590,7 @@ function createCharacter() {
     character = new THREE.Mesh(geometry, material)
     character.position.copy(camera.position)
     character.position.z = -227
-    camera.add(character)
+    // camera.add(character)
     scene.add(character)
 }
 function performAnnotation(event: MouseEvent) {
@@ -729,7 +769,7 @@ function physicsWorld() {
     const planeBody = new CANNON.Body({ mass: 0 })
     planeBody.addShape(planeShape)
     planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
-    planeBody.position.y += 50
+    // planeBody.position.y += 50
     world.addBody(planeBody)
 }
 
@@ -788,7 +828,7 @@ let firstTime = true
 function animate(now: number) {
     // requestAnimationFrame(animate)
     let delta = clock.getDelta()
-    delta = Math.max(delta, 0.1)
+    delta = Math.max(delta, 0.01)
     world.step(delta)
     if (ballAdded) {
         balls.forEach((element, index) => {
