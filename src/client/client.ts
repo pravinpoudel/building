@@ -287,6 +287,10 @@ function normalizeSize(object, scale, needReposition, roomName: string | undefin
     let maxSideDimension = Math.max(size.x, size.y, size.z)
     object.scale.multiplyScalar((1.0 * scale) / maxSideDimension)
 
+    // put need reposition if your center is at center of model and false if center is at bottom
+    // because it does not need to be repositioned
+
+    // this is not for room so for room set it false
     if (needReposition) {
         console.log(object.position, size)
         object.position.set(
@@ -297,6 +301,8 @@ function normalizeSize(object, scale, needReposition, roomName: string | undefin
         object.position.y += ((1.0 * scale) / maxSideDimension) * center.y
     }
 
+    // if it is room, we expect that room; in our room origin is at floor so i
+    // dont shift anything in room just dimension
     if (roomName) {
         ;(rooms[roomName] as any).size.x = ((size.x * scale) / maxSideDimension) as number
         ;(rooms[roomName] as any).size.y = (size.y * scale) / maxSideDimension
@@ -395,11 +401,9 @@ async function init() {
                         _light.shadow.mapSize.height = 1024
                     }
                 })
-                gltf.scene.translateY
                 let object: any = gltf.scene
                 object = normalizeSize(object, 3, false, 'livingRoom')
-
-                scene.add(gltf.scene)
+                scene.add(object)
 
                 fbxLoader.setPath('./models/oldPerson/').load('Boss.fbx', (object) => {
                     // object->animations-> Array(1)->animationclip
